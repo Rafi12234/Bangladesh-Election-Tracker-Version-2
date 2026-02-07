@@ -3,7 +3,6 @@
 /* Landing page — Main dashboard showing election summary, seat counts,
    popular vote percentages, and a constituency list. */
 
-import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import ResultsSummary from '@/components/ResultsSummary';
@@ -12,12 +11,6 @@ import { PageLoader } from '@/components/LoadingSpinner';
 import { useParties, useResults, useSummary, useSeatCounts, useAllianceSeatCounts } from '@/hooks';
 import { getConstituencies } from '@/lib/firestore';
 import type { Constituency } from '@/types';
-
-// Lazy-load map to reduce initial bundle
-const MapView = dynamic(() => import('@/components/MapView'), {
-  ssr: false,
-  loading: () => <div className="h-[500px] sm:h-[550px] lg:h-[650px] skeleton rounded-lg" />,
-});
 
 export default function HomePage() {
   const { parties, loading: partiesLoading } = useParties();
@@ -47,22 +40,6 @@ export default function HomePage() {
           <div className="space-y-8">
             {/* Election summary + metrics */}
             <ResultsSummary summary={summary} seatCounts={seatCounts} allianceSeatCounts={allianceSeatCounts} />
-
-            {/* Mini map preview */}
-            <section>
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">Live Map</h2>
-                <a href="/map" className="text-sm font-medium text-bd-green dark:text-emerald-400 hover:underline flex items-center gap-1">
-                  View Full Map
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </a>
-              </div>
-              <div className="h-[500px] sm:h-[550px] lg:h-[650px] overflow-hidden rounded-xl shadow-soft-lg">
-                <MapView results={results} parties={parties} />
-              </div>
-            </section>
 
             {/* Constituency list */}
             <section>
