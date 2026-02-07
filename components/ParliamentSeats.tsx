@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import Image from 'next/image';
 import type { AllianceSeatCount } from '@/types';
 
 interface Props {
@@ -131,10 +132,22 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
         <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
           {segments.map((segment) => (
             <div key={segment.allianceId} className="flex items-center gap-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: segment.allianceColor }}
-              />
+              {(segment.allianceId === 'bnp' || segment.allianceId === 'jamaat') && (
+                <div className="relative w-6 h-6 flex-shrink-0">
+                  <Image
+                    src={segment.allianceId === 'bnp' ? '/bnp.png' : '/jamaat.png'}
+                    alt={segment.allianceName}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              {segment.allianceId === 'others' && (
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: segment.allianceColor }}
+                />
+              )}
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {segment.allianceName}
               </span>

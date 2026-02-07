@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
 import { ChartBarIcon, CheckCircleIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
 import type { ElectionSummary, SeatCount, AllianceSeatCount } from '@/types';
 import { ELECTION_CONFIG } from '@/lib/constants';
@@ -69,19 +70,31 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-              <div>
-                <h3 
-                  className="text-3xl sm:text-4xl font-black mb-2"
-                  style={{ color: sortedAlliances[0].allianceColor }}
-                >
-                  {sortedAlliances[0].allianceName}
-                </h3>
-                <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
-                  Leading with <span className="font-bold text-gray-900 dark:text-gray-100">{sortedAlliances[0].seats} seats</span> and{' '}
-                  <span className="font-bold" style={{ color: sortedAlliances[0].allianceColor }}>
-                    {formatPercentage(sortedAlliances[0].votePercentage)}
-                  </span> of votes
-                </p>
+              <div className="flex items-center gap-4">
+                {(sortedAlliances[0].allianceId === 'bnp' || sortedAlliances[0].allianceId === 'jamaat') && (
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
+                    <Image
+                      src={sortedAlliances[0].allianceId === 'bnp' ? '/bnp.png' : '/jamaat.png'}
+                      alt={sortedAlliances[0].allianceName}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                <div>
+                  <h3 
+                    className="text-3xl sm:text-4xl font-black mb-2"
+                    style={{ color: sortedAlliances[0].allianceColor }}
+                  >
+                    {sortedAlliances[0].allianceName}
+                  </h3>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
+                    Leading with <span className="font-bold text-gray-900 dark:text-gray-100">{sortedAlliances[0].seats} seats</span> and{' '}
+                    <span className="font-bold" style={{ color: sortedAlliances[0].allianceColor }}>
+                      {formatPercentage(sortedAlliances[0].votePercentage)}
+                    </span> of votes
+                  </p>
+                </div>
               </div>
               
               <div className="flex items-center gap-6">
@@ -155,9 +168,21 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
               {/* Main alliance info */}
               <div className="relative p-5 sm:p-6">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-lg sm:text-xl font-extrabold tracking-tight" style={{ color: alliance.allianceColor }}>
-                    {alliance.allianceName}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    {(alliance.allianceId === 'bnp' || alliance.allianceId === 'jamaat') && (
+                      <div className="relative w-12 h-12 flex-shrink-0">
+                        <Image
+                          src={alliance.allianceId === 'bnp' ? '/bnp.png' : '/jamaat.png'}
+                          alt={alliance.allianceName}
+                          fill
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+                    <span className="text-lg sm:text-xl font-extrabold tracking-tight" style={{ color: alliance.allianceColor }}>
+                      {alliance.allianceName}
+                    </span>
+                  </div>
                   <span className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-gray-100">{alliance.seats}</span>
                 </div>
                 
