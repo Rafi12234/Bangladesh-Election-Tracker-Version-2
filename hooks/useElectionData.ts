@@ -204,46 +204,46 @@ export function useAllianceSeatCounts() {
 // ============================================
 // useMapData - Data for map coloring
 // ============================================
-export function useMapData() {
-  const { results } = useResults();
-  const { parties } = useParties();
+// export function useMapData() {
+//   const { results } = useResults();
+//   const { parties } = useParties();
 
-  const colorMap = useMemo(() => {
-    const map: Record<string, { color: string; party: string; status: string }> = {};
+//   const colorMap = useMemo(() => {
+//     const map: Record<string, { color: string; party: string; status: string }> = {};
 
-    results.forEach(result => {
-      let color = '#E5E7EB'; // Default gray
-      let partyName = 'Pending';
+//     results.forEach(result => {
+//       let color = '#E5E7EB'; // Default gray
+//       let partyName = 'Pending';
 
-      if (result.status === 'completed' && result.winnerPartyId) {
-        const party = parties.find(p => p.id === result.winnerPartyId);
-        if (party) {
-          color = party.color;
-          partyName = party.shortName;
-        }
-      } else if (result.status === 'partial') {
-        const leader = Object.entries(result.partyVotes).sort(
-          ([, a], [, b]) => b - a
-        )[0];
-        if (leader) {
-          const party = parties.find(p => p.id === leader[0]);
-          if (party) {
-            // Lighter shade for leading
-            color = party.color + '80'; // 50% opacity
-            partyName = `${party.shortName} (Leading)`;
-          }
-        }
-      }
+//       if (result.status === 'completed' && result.winnerPartyId) {
+//         const party = parties.find(p => p.id === result.winnerPartyId);
+//         if (party) {
+//           color = party.color;
+//           partyName = party.shortName;
+//         }
+//       } else if (result.status === 'partial') {
+//         const leader = Object.entries(result.partyVotes).sort(
+//           ([, a], [, b]) => b - a
+//         )[0];
+//         if (leader) {
+//           const party = parties.find(p => p.id === leader[0]);
+//           if (party) {
+//             // Lighter shade for leading
+//             color = party.color + '80'; // 50% opacity
+//             partyName = `${party.shortName} (Leading)`;
+//           }
+//         }
+//       }
 
-      map[result.constituencyId] = {
-        color,
-        party: partyName,
-        status: result.status,
-      };
-    });
+//       map[result.constituencyId] = {
+//         color,
+//         party: partyName,
+//         status: result.status,
+//       };
+//     });
 
-    return map;
-  }, [results, parties]);
+//     return map;
+//   }, [results, parties]);
 
-  return { colorMap };
-}
+//   return { colorMap };
+// }

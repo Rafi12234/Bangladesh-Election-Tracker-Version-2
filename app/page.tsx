@@ -5,6 +5,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import ResultsSummary from '@/components/ResultsSummary';
 import ConstituencyList from '@/components/ConstituencyList';
 import { useParties, useResults, useSummary } from '@/hooks';
@@ -57,6 +58,7 @@ export default function HomePage() {
           </section>
         </div>
       </main>
+      <Footer />
     </>
   );
 }

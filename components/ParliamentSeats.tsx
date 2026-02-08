@@ -12,9 +12,13 @@ interface Props {
 export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Props) {
   // Calculate angles for each alliance segment
   const segments = useMemo(() => {
+    // Filter out alliances with 0 seats to avoid NaN values
+    const alliancesWithSeats = allianceSeatCounts.filter(a => a.seats > 0);
+    if (alliancesWithSeats.length === 0 || totalSeats === 0) return [];
+    
     let startAngle = -180; // Start from left (180 degrees in standard position)
     
-    return allianceSeatCounts.map(alliance => {
+    return alliancesWithSeats.map(alliance => {
       const percentage = (alliance.seats / totalSeats) * 100;
       const sweepAngle = (alliance.seats / totalSeats) * 180; // 180 degrees for semicircle
       
@@ -94,16 +98,18 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
                 <title>{`${segment.allianceName}: ${segment.seats} seats`}</title>
               </path>
               
-              {/* Alliance name and percentage outside (like reference image) */}
-              <text
-                x={segment.labelX + 100}
-                y={segment.labelY + 30}
-                textAnchor={segment.textAnchor}
-                className="fill-gray-800 dark:fill-gray-200 font-semibold pointer-events-none select-none"
-                style={{ fontSize: '15px', fontWeight: '600' }}
-              >
-                {segment.allianceName === 'Jamaat NCP Alliance' ? 'Jamaat-NCP' : segment.allianceName.replace('-led Alliance', '').replace(' & Independents', '')}: {segment.percentage.toFixed(0)}%
-              </text>
+              {/* Alliance name and percentage outside (only show if seats > 0) */}
+              {segment.seats > 0 && !isNaN(segment.percentage) && (
+                <text
+                  x={segment.labelX + 100}
+                  y={segment.labelY + 30}
+                  textAnchor={segment.textAnchor}
+                  className="fill-gray-800 dark:fill-gray-200 font-semibold pointer-events-none select-none"
+                  style={{ fontSize: '15px', fontWeight: '600' }}
+                >
+                  {segment.allianceName === 'Jamaat NCP Alliance' ? 'Jamaat-NCP' : segment.allianceName.replace('-led Alliance', '').replace(' & Independents', '')}: {segment.percentage.toFixed(0)}%
+                </text>
+              )}
             </g>
           ))}
           

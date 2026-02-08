@@ -37,16 +37,16 @@ export const RESULT_STATUS = {
 } as const;
 
 // Map configuration
-export const MAP_CONFIG = {
-  CENTER: [23.5, 90.3] as [number, number], // Bangladesh center
-  ZOOM: 7,
-  MIN_ZOOM: 5,
-  MAX_ZOOM: 12,
-  BOUNDS: [
-    [20.0, 87.0], // Southwest - extended for full visibility
-    [27.0, 93.5], // Northeast - extended for full visibility
-  ] as [[number, number], [number, number]],
-} as const;
+// export const MAP_CONFIG = {
+//   CENTER: [23.5, 90.3] as [number, number], // Bangladesh center
+//   ZOOM: 7,
+//   MIN_ZOOM: 5,
+//   MAX_ZOOM: 12,
+//   BOUNDS: [
+//     [20.0, 87.0], // Southwest - extended for full visibility
+//     [27.0, 93.5], // Northeast - extended for full visibility
+//   ] as [[number, number], [number, number]],
+// } as const;
 
 // Firestore collection names
 export const COLLECTIONS = {
