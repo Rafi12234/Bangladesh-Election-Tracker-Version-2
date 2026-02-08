@@ -17,12 +17,41 @@ interface Props {
 export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts }: Props) {
   const [showAll, setShowAll] = useState(false);
   const [expandedAlliances, setExpandedAlliances] = useState<Set<string>>(new Set());
-  const { TOTAL_SEATS } = ELECTION_CONFIG;
+  const { TOTAL_SEATS, MAJORITY_SEATS } = ELECTION_CONFIG;
 
   // Sort alliances by percentage (highest first)
   const sortedAlliances = useMemo(() => {
     return [...allianceSeatCounts].sort((a, b) => b.votePercentage - a.votePercentage);
   }, [allianceSeatCounts]);
+
+  // Check if there's a winner (alliance or party with >= 151 seats)
+  const winner = useMemo(() => {
+    // Check alliances first
+    const winningAlliance = sortedAlliances.find(a => a.seats >= MAJORITY_SEATS);
+    if (winningAlliance) {
+      return { type: 'alliance' as const, data: winningAlliance };
+    }
+    
+    // Check individual parties
+    const winningParty = seatCounts.find(p => p.seats >= MAJORITY_SEATS);
+    if (winningParty) {
+      return { type: 'party' as const, data: winningParty };
+    }
+    
+    return null;
+  }, [sortedAlliances, seatCounts, MAJORITY_SEATS]);
+
+  // Helper function to get color from winner data
+  const getWinnerColor = () => {
+    if (!winner) return sortedAlliances[0]?.allianceColor;
+    return winner.type === 'alliance' ? winner.data.allianceColor : winner.data.partyColor;
+  };
+
+  // Helper function to get name from winner data
+  const getWinnerName = () => {
+    if (!winner) return sortedAlliances[0]?.allianceName;
+    return winner.type === 'alliance' ? winner.data.allianceName : winner.data.partyName;
+  };
 
   const toggleAllianceExpanded = (allianceId: string) => {
     setExpandedAlliances(prev => {
@@ -49,29 +78,59 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
         />
       </div>
 
-      {/* Leading Alliance Announcement */}
+      {/* Winner Declaration or Leading Alliance Announcement */}
       {sortedAlliances.length > 0 && summary.declaredSeats > 0 && (
-        <div className="relative overflow-hidden rounded-2xl border-2 border-gray-200 dark:border-slate-700 bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 p-6 sm:p-8 shadow-lg">
+        <div className={`relative overflow-hidden rounded-2xl p-6 sm:p-8 shadow-lg ${
+          winner 
+            ? 'border-4 border-yellow-400 dark:border-yellow-500 bg-gradient-to-br from-yellow-50 via-white to-yellow-50 dark:from-yellow-900/20 dark:via-slate-900 dark:to-yellow-900/20' 
+            : 'border-2 border-gray-200 dark:border-slate-700 bg-gradient-to-br from-white via-gray-50 to-white dark:from-slate-900 dark:via-slate-800 dark:to-slate-900'
+        }`}>
           {/* Background accent */}
           <div 
-            className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl opacity-10"
-            style={{ backgroundColor: sortedAlliances[0].allianceColor }}
+            className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl ${winner ? 'opacity-20' : 'opacity-10'}`}
+            style={{ backgroundColor: getWinnerColor() }}
           />
+          
+          {/* Celebration confetti effect for winner */}
+          {winner && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-10 left-10 text-4xl animate-bounce">🎉</div>
+              <div className="absolute top-20 right-20 text-3xl animate-bounce delay-100">✨</div>
+              <div className="absolute bottom-20 left-20 text-3xl animate-bounce delay-200">🎊</div>
+              <div className="absolute bottom-10 right-10 text-4xl animate-bounce delay-300">🏆</div>
+            </div>
+          )}
           
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-3">
               <div 
-                className="w-2 h-2 rounded-full animate-pulse"
-                style={{ backgroundColor: sortedAlliances[0].allianceColor }}
+                className={`w-2 h-2 rounded-full ${winner ? 'animate-ping' : 'animate-pulse'}`}
+                style={{ backgroundColor: getWinnerColor() }}
               />
-              <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
-                Current Leading Alliance
-              </span>
+              {winner ? (
+                <span className="text-xs sm:text-sm font-black uppercase tracking-wider text-yellow-700 dark:text-yellow-400 animate-pulse">
+                  🏆 Winner Declared - Majority Achieved
+                </span>
+              ) : (
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-400">
+                  Current Leading Alliance
+                </span>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div className="flex items-center gap-4">
-                {(sortedAlliances[0].allianceId === 'bnp' || sortedAlliances[0].allianceId === 'jamaat') && (
+                {winner?.type === 'alliance' && (winner.data.allianceId === 'bnp' || winner.data.allianceId === 'jamaat') && (
+                  <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
+                    <Image
+                      src={winner.data.allianceId === 'bnp' ? '/bnp.png' : '/jamaat.png'}
+                      alt={winner.data.allianceName}
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                )}
+                {!winner && (sortedAlliances[0].allianceId === 'bnp' || sortedAlliances[0].allianceId === 'jamaat') && (
                   <div className="relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0">
                     <Image
                       src={sortedAlliances[0].allianceId === 'bnp' ? '/bnp.png' : '/jamaat.png'}
@@ -84,23 +143,35 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
                 <div>
                   <h3 
                     className="text-3xl sm:text-4xl font-black mb-2"
-                    style={{ color: sortedAlliances[0].allianceColor }}
+                    style={{ color: getWinnerColor() }}
                   >
-                    {sortedAlliances[0].allianceName}
+                    {getWinnerName()}
                   </h3>
                   <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base font-medium">
-                    Leading with <span className="font-bold text-gray-900 dark:text-gray-100">{sortedAlliances[0].seats} seats</span> and{' '}
-                    <span className="font-bold" style={{ color: sortedAlliances[0].allianceColor }}>
-                      {formatPercentage(sortedAlliances[0].votePercentage)}
-                    </span> of votes
+                    {winner ? (
+                      <>
+                        <span className="font-black text-green-700 dark:text-green-400">Wins with {winner.data.seats} seats</span>
+                        {' '}({MAJORITY_SEATS} needed for majority) and{' '}
+                        <span className="font-bold" style={{ color: getWinnerColor() }}>
+                          {formatPercentage(winner.data.votePercentage)}
+                        </span> of votes
+                      </>
+                    ) : (
+                      <>
+                        Leading with <span className="font-bold text-gray-900 dark:text-gray-100">{sortedAlliances[0].seats} seats</span> and{' '}
+                        <span className="font-bold" style={{ color: sortedAlliances[0].allianceColor }}>
+                          {formatPercentage(sortedAlliances[0].votePercentage)}
+                        </span> of votes
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
               
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-gray-100">
-                    {sortedAlliances[0].seats}
+                  <div className={`text-3xl sm:text-4xl font-black ${winner ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                    {winner?.data.seats || sortedAlliances[0].seats}
                   </div>
                   <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     Seats
@@ -109,9 +180,9 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
                 <div className="text-center">
                   <div 
                     className="text-3xl sm:text-4xl font-black"
-                    style={{ color: sortedAlliances[0].allianceColor }}
+                    style={{ color: getWinnerColor() }}
                   >
-                    {formatPercentage(sortedAlliances[0].votePercentage)}
+                    {formatPercentage(winner?.data.votePercentage || sortedAlliances[0].votePercentage)}
                   </div>
                   <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                     Votes
@@ -123,15 +194,27 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
             {/* Progress indicator */}
             <div className="mt-6">
               <div className="flex justify-between text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                <span>Progress to Victory</span>
-                <span>{sortedAlliances[0].seats}/{TOTAL_SEATS} ({formatPercentage((sortedAlliances[0].seats / TOTAL_SEATS) * 100)})</span>
+                <span>{winner ? 'Final Result' : 'Progress to Victory'}</span>
+                <span>
+                  {winner?.data.seats || sortedAlliances[0].seats}/{MAJORITY_SEATS} needed
+                  {winner && <span className="ml-2 text-green-600 dark:text-green-400 font-black">✓ MAJORITY ACHIEVED</span>}
+                </span>
               </div>
               <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-slate-700">
+                {/* Majority line indicator */}
+                <div 
+                  className="absolute top-0 bottom-0 w-0.5 bg-gray-800 dark:bg-gray-300 z-10"
+                  style={{ left: `${(MAJORITY_SEATS / TOTAL_SEATS) * 100}%` }}
+                >
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold text-gray-800 dark:text-gray-300 whitespace-nowrap">
+                    {MAJORITY_SEATS}
+                  </div>
+                </div>
                 <div
-                  className="absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out"
+                  className={`absolute inset-y-0 left-0 rounded-full transition-all duration-1000 ease-out ${winner ? 'animate-pulse' : ''}`}
                   style={{
-                    width: `${(sortedAlliances[0].seats / TOTAL_SEATS) * 100}%`,
-                    backgroundColor: sortedAlliances[0].allianceColor,
+                    width: `${((winner?.data.seats || sortedAlliances[0].seats) / TOTAL_SEATS) * 100}%`,
+                    backgroundColor: getWinnerColor(),
                   }}
                 >
                   <div className="absolute inset-0 bg-white/20 animate-pulse" />
