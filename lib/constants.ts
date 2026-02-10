@@ -4,8 +4,9 @@
 export const ELECTION_CONFIG = {
   TOTAL_SEATS: 300,
   MAJORITY_SEATS: 151,
+  TOTAL_REGISTERED_VOTERS: 127_711_414,
   ELECTION_NAME: 'Bangladesh Parliamentary Election 2026',
-  ELECTION_DATE: '2026-01-XX', // Update with actual date
+  ELECTION_DATE: '2026-02-08',
 } as const;
 
 // Election editorial header information

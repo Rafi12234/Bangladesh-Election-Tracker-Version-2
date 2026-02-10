@@ -10,17 +10,29 @@ import { useParties, useConstituencyResult } from '@/hooks';
 import { RESULT_STATUS } from '@/lib/constants';
 import { formatNumber, formatPercentage, getRelativeTime, calculatePercentage } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { getConstituencyById } from '@/lib/firestore';
+import { getConstituencyById, normalizeConstituencyId } from '@/lib/firestore';
 import type { Constituency } from '@/types';
 
 export default function ConstituencyDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params?.id as string;
+  const rawId = params?.id as string;
+  
+  // Decode URL-encoded constituency ID (e.g., "cox's%20bazar-1" -> "cox's bazar-1")
+  const id = rawId ? decodeURIComponent(rawId) : '';
+  const normalizedId = id ? normalizeConstituencyId(id) : '';
 
   const { parties } = useParties();
   const { result, candidates, loading } = useConstituencyResult(id);
   const [constituency, setConstituency] = useState<Constituency | null>(null);
+
+  // Debug logging
+  console.log('[Debug] Raw ID:', rawId);
+  console.log('[Debug] Decoded ID:', id);
+  console.log('[Debug] Normalized ID:', normalizedId);
+  console.log('[Debug] Result:', result);
+  console.log('[Debug] Candidates:', candidates);
+  console.log('[Debug] Loading:', loading);
 
   useEffect(() => {
     if (id) {
@@ -79,7 +91,7 @@ export default function ConstituencyDetailPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 break-words">
-                    {constituency?.name || id}
+                    {constituency?.name || decodeURIComponent(id || '')}
                   </h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Constituency #{constituency?.number || ''}
@@ -113,32 +125,55 @@ export default function ConstituencyDetailPage() {
 
             {/* Key stats */}
             {result && (
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <StatCard label="Total Votes" value={formatNumber(result.totalVotes)} />
-                <StatCard label="Turnout" value={formatPercentage(result.turnoutPercentage)} />
-                <StatCard
-                  label="Total Voters"
-                  value={formatNumber(constituency?.totalVoters || 0)}
-                />
+                <StatCard label="Margin" value={formatNumber(result.margin)} />
               </div>
             )}
 
-            {/* Vote breakdown */}
+            {/* Vote breakdown or candidates */}
             {voteEntries.length > 0 ? (
               <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-soft">
                 <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-gray-100">Vote Breakdown</h2>
                 <VoteBar entries={voteEntries} />
               </div>
+            ) : candidates.length > 0 ? (
+              <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-soft">
+                <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-gray-100">Candidates</h2>
+                <div className="divide-y divide-gray-100 dark:divide-slate-800">
+                  {candidates.map(c => {
+                    const party = partyMap[c.partyId];
+                    const votes = result?.partyVotes[c.partyId] || 0;
+                    return (
+                      <div key={c.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="h-3.5 w-3.5 rounded-full shadow-sm"
+                            style={{ backgroundColor: party?.color || '#6B7280' }}
+                          />
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{c.name}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{party?.name || c.partyId}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{formatNumber(votes)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">Votes will appear here once counting begins</p>
+              </div>
             ) : (
               <div className="rounded-xl border border-dashed border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/50 p-12 text-center shadow-sm">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">No results available yet</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">No candidate data available</p>
+                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">This constituency may not have candidate information yet</p>
               </div>
             )}
 
-            {/* Candidate list */}
-            {candidates.length > 0 && (
+            {/* Additional info if both votes and candidates exist */}
+            {voteEntries.length > 0 && candidates.length > 0 && (
               <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6 shadow-soft">
-                <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-gray-100">Candidates</h2>
+                <h2 className="mb-4 text-base font-bold text-gray-900 dark:text-gray-100">All Candidates</h2>
                 <div className="divide-y divide-gray-100 dark:divide-slate-800">
                   {candidates.map(c => {
                     const party = partyMap[c.partyId];

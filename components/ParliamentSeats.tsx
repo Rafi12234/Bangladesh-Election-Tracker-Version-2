@@ -40,21 +40,62 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
     
     let startAngle = -180; // Start from left (180 degrees in standard position)
     
-    return allSegments.map(alliance => {
+    const calculatedSegments = allSegments.map((alliance, index) => {
       const percentage = (alliance.seats / TOTAL_PARLIAMENT_SEATS) * 100;
       const sweepAngle = (alliance.seats / TOTAL_PARLIAMENT_SEATS) * 180; // 180 degrees for semicircle
+      const isSmall = percentage < 5; // Small segments need leader lines
       
-      // Calculate label position (OUTSIDE the donut, like the reference image)
+      // Calculate segment midpoint for arc connection
       const midAngle = startAngle + (sweepAngle / 2);
       const midAngleRad = (midAngle * Math.PI) / 180;
-      const labelRadius = 130; // Position labels outside
-      const labelX = 150 + labelRadius * Math.cos(midAngleRad);
-      const labelY = 150 + labelRadius * Math.sin(midAngleRad);
       
-      // Determine text anchor based on angle
+      // Arc connection point (on the outer edge of the donut)
+      const arcRadius = 115;
+      const arcX = 150 + arcRadius * Math.cos(midAngleRad);
+      const arcY = 150 + arcRadius * Math.sin(midAngleRad);
+      
+      // Label position - move small segments further out and position strategically
+      let labelRadius: number;
+      let labelX: number;
+      let labelY: number;
       let textAnchor: 'start' | 'middle' | 'end' = 'middle';
-      if (midAngle < -135) textAnchor = 'end';
-      else if (midAngle > -45) textAnchor = 'start';
+      
+      if (isSmall) {
+        // Position small segments with more spacing
+        labelRadius = 155;
+        
+        // Stack small segments vertically to avoid overlaps
+        const smallSegmentIndex = allSegments.filter((s, i) => {
+          const p = (s.seats / TOTAL_PARLIAMENT_SEATS) * 100;
+          return p < 5 && i < index;
+        }).length;
+        
+        // Adjust position based on location to avoid overlaps
+        if (midAngle < -150) {
+          // Left side - position labels to the left
+          labelX = 150 + labelRadius * Math.cos(-165 * Math.PI / 180);
+          labelY = 150 + labelRadius * Math.sin(-165 * Math.PI / 180) - (smallSegmentIndex * 22);
+          textAnchor = 'end';
+        } else if (midAngle > -30) {
+          // Right side - position labels to the right
+          labelX = 150 + labelRadius * Math.cos(-15 * Math.PI / 180);
+          labelY = 150 + labelRadius * Math.sin(-15 * Math.PI / 180) - (smallSegmentIndex * 22);
+          textAnchor = 'start';
+        } else {
+          // Middle - position based on segment location
+          labelX = 150 + labelRadius * Math.cos(midAngleRad);
+          labelY = 150 + labelRadius * Math.sin(midAngleRad) - (smallSegmentIndex * 10);
+          textAnchor = midAngle < -90 ? 'end' : 'start';
+        }
+      } else {
+        // Large segments - position normally
+        labelRadius = 130;
+        labelX = 150 + labelRadius * Math.cos(midAngleRad);
+        labelY = 150 + labelRadius * Math.sin(midAngleRad);
+        
+        if (midAngle < -135) textAnchor = 'end';
+        else if (midAngle > -45) textAnchor = 'start';
+      }
       
       const segment = {
         ...alliance,
@@ -64,11 +105,16 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
         labelX,
         labelY,
         textAnchor,
+        arcX,
+        arcY,
+        isSmall,
       };
       
       startAngle += sweepAngle;
       return segment;
     });
+    
+    return calculatedSegments;
   }, [allianceSeatCounts, totalSeats]);
 
   // Function to create SVG path for donut segment
@@ -100,9 +146,9 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
   return (
     <div className="relative w-full flex items-center justify-center py-8">
       {/* SVG Container - minimal design */}
-      <div className="relative w-full max-w-[650px]">
+      <div className="relative w-full max-w-[700px]">
         <svg
-          viewBox="0 0 500 250"
+          viewBox="0 0 600 280"
           className="w-full h-auto"
           preserveAspectRatio="xMidYMid meet"
         >
@@ -115,23 +161,38 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
                 fill={segment.allianceColor}
                 className="transition-all duration-300 hover:opacity-80"
                 stroke="none"
-                transform="translate(100, 30)"
+                transform="translate(150, 45)"
               >
                 <title>{`${segment.allianceName}: ${segment.seats} seats`}</title>
               </path>
               
+              {/* Leader line for small segments */}
+              {segment.seats > 0 && segment.isSmall && (
+                <polyline
+                  points={`${segment.arcX + 150},${segment.arcY + 45} ${segment.labelX + 150 - (segment.textAnchor === 'end' ? 5 : segment.textAnchor === 'start' ? -5 : 0)},${segment.labelY + 45}`}
+                  fill="none"
+                  stroke={segment.allianceColor}
+                  strokeWidth="1.5"
+                  className="opacity-60"
+                />
+              )}
+              
               {/* Alliance name and seats outside (only show if seats > 0) */}
               {segment.seats > 0 && (
                 <text
-                  x={segment.labelX + 100}
-                  y={segment.labelY + 30}
+                  x={segment.labelX + 150}
+                  y={segment.labelY + 45}
                   textAnchor={segment.textAnchor}
                   className="fill-gray-800 dark:fill-gray-200 font-semibold pointer-events-none select-none"
-                  style={{ fontSize: '15px', fontWeight: '600' }}
+                  style={{ fontSize: '14px', fontWeight: '600' }}
                 >
                   {segment.allianceId === 'undeclared' 
                     ? `Undeclared: ${segment.seats}`
-                    : `${segment.allianceName === 'Jamaat NCP Alliance' ? 'Jamaat-NCP' : segment.allianceName.replace('-led Alliance', '').replace(' & Independents', '')}: ${segment.seats}`
+                    : segment.allianceId === 'jamaat'
+                    ? `Jamaat-NCP: ${segment.seats}`
+                    : segment.allianceId === 'bnp'
+                    ? `BNP: ${segment.seats}`
+                    : `Others: ${segment.seats}`
                   }
                 </text>
               )}
@@ -140,8 +201,8 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
           
           {/* Total seats label in center */}
           <text
-            x="250"
-            y="170"
+            x="300"
+            y="185"
             textAnchor="middle"
             className="fill-gray-900 dark:fill-gray-100 font-black pointer-events-none select-none"
             style={{ fontSize: '56px', fontWeight: '900' }}
@@ -149,8 +210,8 @@ export default function ParliamentSeats({ allianceSeatCounts, totalSeats }: Prop
             300
           </text>
           <text
-            x="250"
-            y="188"
+            x="300"
+            y="203"
             textAnchor="middle"
             className="fill-gray-500 dark:fill-gray-400 font-medium pointer-events-none select-none"
             style={{ fontSize: '14px', fontWeight: '500', letterSpacing: '1px' }}

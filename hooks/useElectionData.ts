@@ -31,15 +31,18 @@ import { aggregateAllianceSeatCounts } from '@/lib/alliances';
 // ============================================
 export function useParties() {
   const [parties, setParties] = useState<Party[]>(staticParties);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     getParties()
       .then(data => { if (data.length) setParties(data); })
       .catch(err => {
         console.error('Failed to fetch parties:', err);
-      });
+        setError(err);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return { parties, loading, error };
@@ -50,12 +53,16 @@ export function useParties() {
 // ============================================
 export function useResults() {
   const [results, setResults] = useState<Result[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    setLoading(true);
     // Real-time subscription handles both initial load and updates
-    const unsubscribe = subscribeToResults(setResults);
+    const unsubscribe = subscribeToResults(data => {
+      setResults(data);
+      setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
 
@@ -67,27 +74,45 @@ export function useResults() {
 // ============================================
 export function useSummary() {
   const [summary, setSummary] = useState<ElectionSummary | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { results } = useResults();
 
   useEffect(() => {
-    const unsubscribe = subscribeToSummary(setSummary);
+    setLoading(true);
+    const unsubscribe = subscribeToSummary(data => {
+      setSummary(data);
+      setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
 
-  // Compute summary from results if not available
+  // Compute summary from results if Firestore summary doc doesn't exist
   const computedSummary = useMemo((): ElectionSummary => {
     if (summary) return summary;
 
+    // Compute from live results when no summary doc exists
+    let declaredSeats = 0;
+    let totalVotesCast = 0;
+
+    results.forEach(r => {
+      totalVotesCast += r.totalVotes;
+      if (r.status === 'completed') declaredSeats++;
+    });
+
+    const totalRegisteredVoters = ELECTION_CONFIG.TOTAL_REGISTERED_VOTERS;
+    const nationalTurnout = totalRegisteredVoters > 0 ? (totalVotesCast / totalRegisteredVoters) * 100 : 0;
+
     return {
       totalSeats: ELECTION_CONFIG.TOTAL_SEATS,
-      declaredSeats: 0,
+      declaredSeats,
       requiredMajority: ELECTION_CONFIG.MAJORITY_SEATS,
       partySeatCounts: [],
-      totalVotesCast: 0,
-      averageTurnout: 0,
+      totalVotesCast,
+      totalRegisteredVoters,
+      nationalTurnout,
       lastUpdated: new Date(),
     };
-  }, [summary]);
+  }, [summary, results]);
 
   return { summary: computedSummary, loading };
 }

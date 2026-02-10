@@ -126,7 +126,7 @@ export default function ConstituencyList({ results, parties, constituencies }: P
           return (
             <Link
               key={constituency.id}
-              href={`/constituency/${constituency.id}`}
+              href={`/constituency/${encodeURIComponent(constituency.id)}`}
               className="group block rounded-2xl border-2 border-gray-200/70 dark:border-slate-700/70 bg-gradient-to-r from-white via-white to-gray-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/50 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-bd-green/50 dark:hover:border-emerald-500/50 hover:scale-[1.01]"
             >
               <div className="flex items-center justify-between gap-3">

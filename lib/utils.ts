@@ -4,6 +4,7 @@
  * Format number with commas (e.g., 1,234,567)
  */
 export function formatNumber(num: number): string {
+  if (num === undefined || num === null || isNaN(num)) return '0';
   return new Intl.NumberFormat('en-IN').format(num);
 }
 
@@ -40,6 +41,7 @@ export function formatRelativeTime(date: Date): string {
  * Format percentage with specified decimal places
  */
 export function formatPercentage(value: number, decimals: number = 1): string {
+  if (value === undefined || value === null || isNaN(value)) return '0.0%';
   return `${value.toFixed(decimals)}%`;
 }
 

@@ -11,7 +11,7 @@ import type { Party, AdminUser, Result } from '@/types';
 import { divisions } from '@/data/divisions';
 import { saveResult, getResultByConstituency, getAllConstituencyDocuments } from '@/lib/firestore';
 import { formatNumber, formatPercentage } from '@/lib/utils';
-import { getPartyById } from '@/data/parties';
+import { getPartyById, getPartyByName, normalizePartyKey } from '@/data/parties';
 
 interface Props {
   parties: Party[];
@@ -25,7 +25,8 @@ interface VoteInput {
 }
 
 interface CandidateEntry {
-  party: string;
+  party: string;          // Normalized party ID (e.g. 'bnp')
+  partyDisplayName: string; // Display name (full name or short)
   candidateName: string;
   symbol: string;
   color: string;
@@ -177,9 +178,11 @@ export default function AdminPanel({ parties, adminUser, onLogout }: Props) {
     if (Array.isArray(candidatesArr)) {
       for (const item of candidatesArr) {
         const partyKey = (item.party || '').toString();
-        const staticParty = getPartyById(partyKey);
+        const normalizedId = normalizePartyKey(partyKey);
+        const staticParty = getPartyById(normalizedId);
         entries.push({
-          party: item.party || staticParty?.shortName || partyKey || 'Unknown',
+          party: normalizedId,
+          partyDisplayName: staticParty?.shortName || partyKey || 'Unknown',
           candidateName: item.candidateName || item.name || '',
           symbol: item.symbol || staticParty?.symbol || '',
           color: staticParty?.color || '#6B7280',
@@ -403,7 +406,7 @@ export default function AdminPanel({ parties, adminUser, onLogout }: Props) {
                                     <span className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: candidate.color }} />
                                     <div className="flex-1 min-w-0">
                                       <span className="text-xs font-semibold text-gray-900 dark:text-gray-100 truncate block">
-                                        {candidate.party}
+                                        {candidate.partyDisplayName}
                                         {isLeading && <span className="ml-1.5 text-green-600 dark:text-emerald-400">● Leading</span>}
                                       </span>
                                       {candidate.candidateName && (
@@ -431,7 +434,7 @@ export default function AdminPanel({ parties, adminUser, onLogout }: Props) {
                                 </span>
                                 <span className="text-gray-500 dark:text-gray-400">
                                   Winner: <strong style={{ color: candidates.find(cd => cd.party === calculated.winnerId)?.color }}>
-                                    {candidates.find(cd => cd.party === calculated.winnerId)?.party || '—'}
+                                    {candidates.find(cd => cd.party === calculated.winnerId)?.partyDisplayName || '—'}
                                   </strong>
                                 </span>
                                 <span className="text-gray-500 dark:text-gray-400">

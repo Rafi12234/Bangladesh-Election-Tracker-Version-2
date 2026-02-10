@@ -4,7 +4,7 @@
 import { Party } from '@/types';
 
 export const parties: Party[] = [
-  // BNP-led Alliance
+  // BNP Alliance (2026)
   {
     id: 'bnp',
     name: 'Bangladesh Nationalist Party (BNP)',
@@ -16,37 +16,87 @@ export const parties: Party[] = [
     isIndependent: false,
   },
   {
-    id: 'gano-forum',
-    name: 'Gano Forum',
-    shortName: 'GF',
-    color: '#9370DB',
-    symbol: '🏠',
-    order: 2,
-    allianceId: 'bnp',
-    isIndependent: false,
-  },
-  {
-    id: 'ldp',
-    name: 'Liberal Democratic Party (LDP)',
-    shortName: 'LDP',
-    color: '#20B2AA',
-    symbol: '📖',
-    order: 3,
-    allianceId: 'bnp',
-    isIndependent: false,
-  },
-  {
     id: 'nagorik-oikko',
     name: 'Nagorik Oikko',
     shortName: 'NO',
     color: '#4169E1',
     symbol: '🔷',
+    order: 2,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'gonoodhikar',
+    name: 'Gonoodhikar Porishad',
+    shortName: 'GDP',
+    color: '#BC8F8F',
+    symbol: '🔰',
+    order: 3,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'bd-biplobe-workers',
+    name: 'Bangladesh Biplobe Workers Party',
+    shortName: 'BBWP',
+    color: '#DC143C',
+    symbol: '⚒️',
     order: 4,
     allianceId: 'bnp',
     isIndependent: false,
   },
+  {
+    id: 'jamiyate-ulamaye',
+    name: 'Jamiyate Ulamaye Islam Bangladesh',
+    shortName: 'JUIB',
+    color: '#D2B48C',
+    symbol: '📖',
+    order: 5,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'ganosamhati',
+    name: 'Ganosamhati Andolon',
+    shortName: 'GSA',
+    color: '#DEB887',
+    symbol: '✌️',
+    order: 6,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'bd-jatiya-party-bjp',
+    name: 'Bangladesh Jatiya Party-BJP',
+    shortName: 'BJP',
+    color: '#FF6347',
+    symbol: '🪷',
+    order: 7,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'npp',
+    name: "National People's Party",
+    shortName: 'NPP',
+    color: '#6B8E23',
+    symbol: '🌾',
+    order: 8,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
+  {
+    id: 'ndm',
+    name: 'National Democratic Movement (NDM)',
+    shortName: 'NDM',
+    color: '#9ACD32',
+    symbol: '🚩',
+    order: 9,
+    allianceId: 'bnp',
+    isIndependent: false,
+  },
 
-  // Jamaat-led Alliance
+  // Jamaat-e-Islami NCP Alliance (2026)
   {
     id: 'jamaat',
     name: 'Bangladesh Jamaat-e-Islami',
@@ -58,21 +108,21 @@ export const parties: Party[] = [
     isIndependent: false,
   },
   {
-    id: 'islami-andolan',
-    name: 'Islami Andolan Bangladesh',
-    shortName: 'IAB',
-    color: '#2F4F4F',
-    symbol: '☪️',
+    id: 'jatiyo-nagarik',
+    name: 'Jatiyo Nagarik Party (NCP)',
+    shortName: 'NCP',
+    color: '#EEE8AA',
+    symbol: '🌐',
     order: 11,
     allianceId: 'jamaat',
     isIndependent: false,
   },
   {
-    id: 'islamic-front',
-    name: 'Bangladesh Islamic Front',
-    shortName: 'BIF',
-    color: '#556B2F',
-    symbol: '🕌',
+    id: 'bd-khalafat-majlish',
+    name: 'Bangladesh Khalafat Majlish',
+    shortName: 'BKM',
+    color: '#32CD32',
+    symbol: '📿',
     order: 12,
     allianceId: 'jamaat',
     isIndependent: false,
@@ -87,15 +137,105 @@ export const parties: Party[] = [
     allianceId: 'jamaat',
     isIndependent: false,
   },
+  {
+    id: 'ldp',
+    name: 'Liberal Democratic Party (LDP)',
+    shortName: 'LDP',
+    color: '#20B2AA',
+    symbol: '📖',
+    order: 14,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
+  {
+    id: 'bd-nejame',
+    name: 'Bangladesh Nejame Party',
+    shortName: 'BNP2',
+    color: '#98FB98',
+    symbol: '⭐',
+    order: 15,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
+  {
+    id: 'ab-party',
+    name: 'Amar Bangladesh Party (AB Party)',
+    shortName: 'AB',
+    color: '#7B68EE',
+    symbol: '🇧🇩',
+    order: 16,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
+  {
+    id: 'bd-development',
+    name: 'Bangladesh Development Party',
+    shortName: 'BDP',
+    color: '#5F9EA0',
+    symbol: '🏗️',
+    order: 17,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
+  {
+    id: 'jatiyo-ganotantric',
+    name: 'Jatiyo Ganotantric Party',
+    shortName: 'JGP',
+    color: '#F0E68C',
+    symbol: '🏛️',
+    order: 18,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
+  {
+    id: 'bd-labour',
+    name: 'Bangladesh Labour Party',
+    shortName: 'BLP',
+    color: '#CD5C5C',
+    symbol: '⚙️',
+    order: 19,
+    allianceId: 'jamaat',
+    isIndependent: false,
+  },
 
-  // Other Major Parties (not in main alliances)
+  // Other Major Parties (not in alliances)
+  {
+    id: 'gano-forum',
+    name: 'Gano Forum',
+    shortName: 'GF',
+    color: '#9370DB',
+    symbol: '🏠',
+    order: 20,
+    allianceId: null,
+    isIndependent: false,
+  },
+  {
+    id: 'islami-andolan',
+    name: 'Islami Andolan Bangladesh',
+    shortName: 'IAB',
+    color: '#2F4F4F',
+    symbol: '☪️',
+    order: 21,
+    allianceId: null,
+    isIndependent: false,
+  },
+  {
+    id: 'islamic-front',
+    name: 'Bangladesh Islamic Front',
+    shortName: 'BIF',
+    color: '#556B2F',
+    symbol: '🕌',
+    order: 22,
+    allianceId: null,
+    isIndependent: false,
+  },
   {
     id: 'jatiya-party',
     name: 'Jatiya Party',
     shortName: 'JP',
     color: '#FFD700',
     symbol: '🌻',
-    order: 20,
+    order: 23,
     allianceId: null,
     isIndependent: false,
   },
@@ -105,7 +245,7 @@ export const parties: Party[] = [
     shortName: 'JP2',
     color: '#FFA500',
     symbol: '🌻',
-    order: 21,
+    order: 24,
     allianceId: null,
     isIndependent: false,
   },
@@ -115,22 +255,12 @@ export const parties: Party[] = [
     shortName: 'JSD',
     color: '#8B0000',
     symbol: '✊',
-    order: 22,
+    order: 25,
     allianceId: null,
     isIndependent: false,
   },
 
   // All Other Registered Parties
-  {
-    id: 'ab-party',
-    name: 'Amar Bangladesh Party (AB Party)',
-    shortName: 'AB',
-    color: '#7B68EE',
-    symbol: '🇧🇩',
-    order: 30,
-    allianceId: null,
-    isIndependent: false,
-  },
   {
     id: 'amjanatar-dol',
     name: 'Amjanatar Dol',
@@ -138,16 +268,6 @@ export const parties: Party[] = [
     color: '#8A2BE2',
     symbol: '🔶',
     order: 31,
-    allianceId: null,
-    isIndependent: false,
-  },
-  {
-    id: 'bd-biplobe-workers',
-    name: 'Bangladesh Biplobe Workers Party',
-    shortName: 'BBWP',
-    color: '#DC143C',
-    symbol: '⚒️',
-    order: 32,
     allianceId: null,
     isIndependent: false,
   },
@@ -171,16 +291,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'bd-development',
-    name: 'Bangladesh Development Party',
-    shortName: 'BDP',
-    color: '#5F9EA0',
-    symbol: '🏗️',
-    order: 35,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'bd-equal-rights',
     name: 'Bangladesh Equal Rights Party',
@@ -191,16 +302,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'bd-jatiya-party-bjp',
-    name: 'Bangladesh Jatiya Party-BJP',
-    shortName: 'BJP',
-    color: '#FF6347',
-    symbol: '🪷',
-    order: 37,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'bd-jatiya-party',
     name: 'Bangladesh Jatiya Party',
@@ -231,26 +333,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'bd-khalafat-majlish',
-    name: 'Bangladesh Khalafat Majlish',
-    shortName: 'BKM',
-    color: '#32CD32',
-    symbol: '📿',
-    order: 41,
-    allianceId: null,
-    isIndependent: false,
-  },
-  {
-    id: 'bd-labour',
-    name: 'Bangladesh Labour Party',
-    shortName: 'BLP',
-    color: '#CD5C5C',
-    symbol: '⚙️',
-    order: 42,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'bd-minority-janata',
     name: 'Bangladesh Minority Janata Party (BJMP)',
@@ -301,16 +384,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'bd-nejame',
-    name: 'Bangladesh Nejame Party',
-    shortName: 'BNP2',
-    color: '#98FB98',
-    symbol: '⭐',
-    order: 48,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'bd-republican',
     name: 'Bangladesh Republican Party',
@@ -361,16 +435,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'ganosamhati',
-    name: 'Ganosamhati Andolon',
-    shortName: 'GSA',
-    color: '#DEB887',
-    symbol: '✌️',
-    order: 54,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'gonotantri',
     name: 'Gonotantri Party',
@@ -381,16 +446,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'gonoodhikar',
-    name: 'Gonoodhikar Porishad',
-    shortName: 'GDP',
-    color: '#BC8F8F',
-    symbol: '🔰',
-    order: 56,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'insaniat-biplab',
     name: 'Insaniat Biplab Bangladesh',
@@ -431,36 +487,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'jamiyate-ulamaye',
-    name: 'Jamiyate Ulamaye Islam Bangladesh',
-    shortName: 'JUIB',
-    color: '#D2B48C',
-    symbol: '📖',
-    order: 61,
-    allianceId: null,
-    isIndependent: false,
-  },
-  {
-    id: 'jatiyo-ganotantric',
-    name: 'Jatiyo Ganotantric Party',
-    shortName: 'JGP',
-    color: '#F0E68C',
-    symbol: '🏛️',
-    order: 62,
-    allianceId: null,
-    isIndependent: false,
-  },
-  {
-    id: 'jatiyo-nagarik',
-    name: 'Jatiyo Nagarik Party (NCP)',
-    shortName: 'NCP',
-    color: '#EEE8AA',
-    symbol: '🌐',
-    order: 63,
-    allianceId: null,
-    isIndependent: false,
-  },
+
   {
     id: 'jonotar-dol',
     name: 'Jonotar Dol',
@@ -471,26 +498,7 @@ export const parties: Party[] = [
     allianceId: null,
     isIndependent: false,
   },
-  {
-    id: 'ndm',
-    name: 'National Democratic Movement (NDM)',
-    shortName: 'NDM',
-    color: '#9ACD32',
-    symbol: '🚩',
-    order: 65,
-    allianceId: null,
-    isIndependent: false,
-  },
-  {
-    id: 'npp',
-    name: "National People's Party",
-    shortName: 'NPP',
-    color: '#6B8E23',
-    symbol: '🌾',
-    order: 66,
-    allianceId: null,
-    isIndependent: false,
-  },
+
 
   // Independent Candidate
   {
@@ -509,15 +517,15 @@ export const parties: Party[] = [
 export const alliances = {
   bnp: {
     id: 'bnp',
-    name: 'BNP-led Alliance',
-    shortName: 'BNP Alliance',
+    name: 'BNP Alliance',
+    shortName: 'BNP',
     color: '#EF4444',
     symbol: '🤝',
   },
   jamaat: {
     id: 'jamaat',
-    name: 'Jamaat NCP Alliance',
-    shortName: 'Jamaat NCP',
+    name: 'Jamaat-e-Islami NCP Alliance',
+    shortName: 'Jamaat-NCP',
     color: '#22C55E',
     symbol: '🤝',
   },
@@ -533,6 +541,71 @@ export const alliances = {
 // Get party by ID
 export function getPartyById(partyId: string): Party | undefined {
   return parties.find(p => p.id === partyId);
+}
+
+// Get party by full name (e.g., "Bangladesh Nationalist Party (BNP)")
+export function getPartyByName(name: string): Party | undefined {
+  if (!name) return undefined;
+  const lower = name.trim().toLowerCase();
+  return parties.find(p => p.name.toLowerCase() === lower);
+}
+
+/**
+ * Normalize a party key that might be either a party ID ('bnp') or
+ * a full party name ('Bangladesh Nationalist Party (BNP)') to a party ID.
+ * Returns the key as-is if no match is found.
+ */
+export function normalizePartyKey(key: string): string {
+  if (!key) return key;
+  
+  const normalized = key.trim();
+  
+  // Already a valid party ID?
+  if (getPartyById(normalized)) return normalized;
+  
+  // Try matching by full name (exact match)
+  const byName = getPartyByName(normalized);
+  if (byName) return byName.id;
+  
+  // Try matching by short name (e.g., "BNP")
+  const byShortName = parties.find(p => 
+    p.shortName.toLowerCase() === normalized.toLowerCase()
+  );
+  if (byShortName) return byShortName.id;
+  
+  // Try fuzzy matching by checking if the key contains party identifiers
+  const lowerKey = normalized.toLowerCase();
+  
+  // Check for common party name variations
+  if (lowerKey.includes('bnp') || lowerKey.includes('jatiotabadi') || lowerKey.includes('nationalist')) {
+    const bnp = parties.find(p => p.id === 'bnp');
+    if (bnp) return bnp.id;
+  }
+  
+  if (lowerKey.includes('jamaat') || lowerKey.includes('islami')) {
+    const jamaat = parties.find(p => p.id === 'jamaat');
+    if (jamaat) return jamaat.id;
+  }
+  
+  if (lowerKey.includes('awami') || lowerKey.includes('league')) {
+    const al = parties.find(p => p.id === 'al');
+    if (al) return al.id;
+  }
+  
+  if (lowerKey.includes('jatiya') || lowerKey.includes('ershad')) {
+    const jp = parties.find(p => p.id === 'jp-ershad');
+    if (jp) return jp.id;
+  }
+  
+  // Try matching any party where the key contains the shortName
+  for (const party of parties) {
+    if (lowerKey.includes(party.shortName.toLowerCase())) {
+      return party.id;
+    }
+  }
+  
+  // Return as-is (could be an independent/unknown)
+  return normalized;
 }
 
 // Get party color with fallback

@@ -87,8 +87,8 @@ export interface PartyVotes {
 }
 
 export interface AllianceVotes {
-  bnp: number;      // BNP-led alliance total
-  jamaat: number;   // Jamaat-led alliance total
+  bnp: number;      // BNP Alliance (2026) total
+  jamaat: number;   // Jamaat-e-Islami NCP Alliance (2026) total
   others: number;   // Others + independents total
 }
 
@@ -101,7 +101,6 @@ export interface Result {
   winnerAllianceId: string | null; // 'bnp', 'jamaat', or 'others'
   winnerCandidateId: string | null;
   totalVotes: number;
-  turnoutPercentage: number;
   margin: number;
   marginPercentage: number;
   status: 'pending' | 'partial' | 'completed';
@@ -141,7 +140,8 @@ export interface ElectionSummary {
   requiredMajority: number;
   partySeatCounts: SeatCount[];
   totalVotesCast: number;
-  averageTurnout: number;
+  totalRegisteredVoters: number;
+  nationalTurnout: number; // totalVotesCast / totalRegisteredVoters * 100
   lastUpdated: Date;
 }
 

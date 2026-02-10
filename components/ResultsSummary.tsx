@@ -68,13 +68,18 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
   return (
     <div className="space-y-6 fade-in">
       {/* Key metrics row with gradient cards */}
-      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-5">
         <MetricCard label="Total Seats" value={TOTAL_SEATS} icon={<ChartBarIcon className="h-6 w-6" />} />
         <MetricCard label="Declared" value={summary.declaredSeats} accent icon={<CheckCircleIcon className="h-6 w-6" />} />
         <MetricCard label="Suspended" value={2} suspended icon={<svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
         <MetricCard
-          label="Avg. Turnout"
-          value={formatPercentage(summary.averageTurnout)}
+          label="Total Voters"
+          value={formatNumber(summary.totalRegisteredVoters)}
+          icon={<svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
+        />
+        <MetricCard
+          label="Turnout"
+          value={formatPercentage(summary.nationalTurnout)}
           icon={<ArrowTrendingUpIcon className="h-6 w-6" />}
         />
       </div>

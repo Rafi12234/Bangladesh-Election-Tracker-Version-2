@@ -16,15 +16,17 @@ import { ELECTION_CONFIG } from '@/lib/constants';
 import type { Constituency, SeatCount } from '@/types';
 
 export default function HomePage() {
-  const { parties } = useParties();
-  const { results } = useResults();
+  const { parties, loading: pLoading } = useParties();
+  const { results, loading: rLoading } = useResults();
   const { summary } = useSummary();
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
+  const [cLoading, setCLoading] = useState(true);
 
   useEffect(() => {
     getConstituencies()
       .then(setConstituencies)
-      .catch(console.error);
+      .catch(console.error)
+      .finally(() => setCLoading(false));
   }, []);
 
   // Compute seat counts locally — no extra hooks / Firestore subscriptions
@@ -45,6 +47,22 @@ export default function HomePage() {
   }, [results, parties]);
 
   const allianceSeatCounts = useMemo(() => aggregateAllianceSeatCounts(results), [results]);
+
+  if (pLoading || rLoading || cLoading) {
+    return (
+      <>
+        <Header />
+        <main className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-8 md:py-10">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-bd-green border-r-transparent" />
+              <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Loading election data...</p>
+            </div>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
