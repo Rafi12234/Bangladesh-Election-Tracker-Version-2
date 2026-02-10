@@ -1,7 +1,7 @@
 # Bangladesh Live Election Tracker 🗳️
 
 Real-time election results and seat counting for Bangladesh parliamentary elections.
-Built with Next.js, Firebase, Leaflet, and Tailwind CSS.
+Built with Next.js 14, Firebase, TypeScript, and Tailwind CSS — optimized for performance and security.
 
 ## Features
 
@@ -48,20 +48,34 @@ Built with Next.js, Firebase, Leaflet, and Tailwind CSS.
 - **Loading States** - Skeletons and spinners
 - **Party Color Indicators** with symbols (emojis)
 
-### ⚡ Performance & Technical
-- **Real-time Updates** - Firestore `onSnapshot` listeners
-- **Lazy Loading** - Map component loaded on-demand
-- **Code Splitting** - Dynamic imports for optimization
-- **Pre-aggregated Data** - Server-side summary calculations
-- **Canvas Rendering** - Leaflet optimization for many features
-- **Efficient Queries** - Indexed Firestore reads
+### 📰 News System
+- **Admin News Management** - Create, edit, publish news articles
+- **Slug-based URLs** - SEO-friendly article links (/news/article-slug)
+- **Markdown Support** - Bold/italic formatting in articles
+- **XSS Protection** - Content sanitization prevents script injection
+- **Draft/Published Status** - Content workflow management
+- **Responsive Article Layout** - Mobile-optimized reading experience
 
-### 🔐 Security
-- **Firebase Authentication** with email/password
-- **Admin Whitelist** in Firestore
-- **Role-based Access** (admin, data-entry)
-- **Audit Trail** - updatedBy tracking
-- **Protected Routes** with secure rules
+### ⚡ Performance & Technical
+- **Real-time Updates** - Firestore `onSnapshot` listeners with optimized subscriptions
+- **Infinite Scroll** - ConstituencyList virtualization (loads 30 items at a time)
+- **React.memo** - Memoized components prevent unnecessary re-renders
+- **Optimized Hooks** - Fixed duplicate subscriptions and memory leaks
+- **Code Splitting** - Dynamic imports and lazy loading
+- **Pre-aggregated Data** - Server-side summary calculations
+- **SWC Minification** - Faster builds with Next.js 14
+- **Package Import Optimization** - Tree-shaking for @heroicons/react
+
+### 🔐 Security & Hardening
+- **Firebase Authentication** with email/password and admin verification
+- **Firestore Security Rules** with field-level validation (vote counts, status enums)
+- **Content Security Policy (CSP)** - Prevents XSS attacks
+- **HTTP Security Headers** - HSTS, X-Frame-Options, X-Content-Type-Options
+- **Input Validation & Sanitization** - Vote count validation (0-10M), HTML stripping
+- **Rate Limiting** - Admin actions limited to 10 requests per minute
+- **XSS Prevention** - News content sanitized, script tags stripped
+- **Role-based Access Control** - admin/data-entry permissions
+- **Audit Trail** - All changes tracked with user ID and timestamp
 
 ### 📊 Data Management
 - **60+ Registered Parties** with alliance assignments
@@ -139,9 +153,13 @@ Open [http://localhost:3000](http://localhost:3000)
 
 **Routes:**
 - `/` — Dashboard  
-- `/map` — Full map
-- `/admin9012` — Admin panel (hidden from navigation)
-- `/constituency/[id]` — Details
+- `/map` — Full map (currently disabled)
+- `/news` — News articles listing
+- `/news/[slug]` — Individual article pages
+- `/admin/news` — News management (admin only)
+- `/admin9012` — Result entry panel (hidden from navigation)
+- `/constituency` — Constituency list with search/filters
+- `/constituency/[id]` — Detailed constituency results
 
 ## Deployment
 
@@ -163,29 +181,44 @@ Open [http://localhost:3000](http://localhost:3000)
 ```
 app/
   page.tsx              → Main dashboard
-  map/page.tsx          → Full interactive map
-  constituency/[id]/    → Constituency detail
-  admin9012/page.tsx    → Admin result entry (secret route)
-  layout.tsx            → Root layout + analytics
+  constituency/
+    page.tsx            → Constituency list with infinite scroll
+    [id]/page.tsx       → Individual constituency details
+  news/
+    page.tsx            → News articles listing
+    [slug]/page.tsx     → Individual article with XSS protection
+  admin/
+    news/               → News management interface
+  admin9012/page.tsx    → Result entry panel (secret route)
+  map/page.tsx          → Interactive map (currently disabled)
+  layout.tsx            → Root layout with security headers
   globals.css           → Global styles
 
 components/
-  Header.tsx            → Navigation
-  ResultsSummary.tsx     → Metrics + seat counter
-  SeatCounter.tsx        → Party seat bar
+  Header.tsx            → Navigation with theme toggle
+  ResultsSummary.tsx     → Metrics + seat counter + parliament visualization
+  ParliamentSeats.tsx   → Parliament seat chart
+  SeatCounter.tsx       → Party seat bar
   VoteBar.tsx           → Vote breakdown bars
-  MapView.tsx           → Leaflet map
-  ConstituencyList.tsx  → Searchable constituency list
-  AdminLogin.tsx        → Auth form
-  AdminPanel.tsx        → Vote entry form
+  ElectionBanner.tsx    → Top banner with live indicator
+  ConstituencyList.tsx  → Virtualized list with infinite scroll
+  NewsCard.tsx          → Article preview cards
+  NewsGrid.tsx          → Responsive article grid
+  AdminLogin.tsx        → Secure auth form
+  AdminPanel.tsx        → Vote entry with validation & rate limiting
+  MapView.tsx           → Leaflet map (disabled)
   LoadingSpinner.tsx    → Loading states
+  Footer.tsx            → Site footer
 
 lib/
   firebase.ts           → Firebase init (singleton)
-  firestore.ts          → All Firestore CRUD + listeners
-  auth.ts               → Auth helpers
-  constants.ts          → App constants
-  utils.ts              → Formatting utilities
+  firestore.ts          → Firestore CRUD + real-time listeners (optimized)
+  auth.ts               → Authentication helpers
+  news.ts               → News article operations
+  validation.ts         → Input validation & XSS sanitization
+  alliances.ts          → Party alliance calculations
+  constants.ts          → App constants & configuration
+  utils.ts              → Formatting & utility functions
 
 hooks/
   useAuth.ts            → Auth state hook
@@ -205,25 +238,35 @@ public/data/geojson/    → Map boundary + district data
 
 | Collection       | Purpose                        |
 |------------------|--------------------------------|
-| `parties`        | Party metadata                 |
-| `constituencies` | 300 constituency records       |
-| `candidates`     | Candidate per constituency     |
-| `results`        | Vote tallies (keyed by constituency ID) |
-| `summary`        | Aggregated seat counts         |
-| `adminUsers`     | Admin access control           |
+| `parties`        | Party metadata (60+ parties)  |
+| `constituencies` | 300 constituency records with candidates |
+| `results`        | Vote tallies with field validation |
+| `summary`        | Real-time aggregated metrics   |
+| `news`           | Articles with draft/published status |
+| `adminUsers`     | Role-based access control      |
 
 ## GeoJSON
 
 Replace placeholder files in `public/data/geojson/` with real Bangladesh constituency boundaries for production.
 Recommended source: [GADM](https://gadm.org/download_country.html) or Bangladesh Election Commission.
 
-## Performance Notes
+## Performance & Security Features
 
-- Map is lazy-loaded via `next/dynamic` (not in initial bundle)
-- Firestore listeners provide real-time updates without polling
-- Static party/division data avoids unnecessary reads
-- `preferCanvas: true` on Leaflet for better rendering of many features
-- Summary document is pre-aggregated to avoid client-side computation
+### Performance Optimizations
+- **Infinite Scroll**: ConstituencyList renders 30 items initially, loads more on scroll
+- **React.memo**: Memoized components prevent cascading re-renders
+- **Hook Optimization**: Fixed duplicate Firestore subscriptions in useSummary
+- **Bundle Optimization**: Tree-shaking for @heroicons/react, SWC minification
+- **Static Data**: Party/division definitions avoid Firestore reads
+- **Lazy Loading**: Map component loaded on-demand (currently disabled)
+
+### Security Hardening
+- **Content Security Policy**: Strict CSP prevents XSS injection attacks
+- **Input Validation**: Vote counts validated (0-10M range), HTML tags stripped
+- **Rate Limiting**: Admin actions limited to prevent abuse (10 req/min)
+- **XSS Prevention**: News content sanitized, dangerous elements removed
+- **Security Headers**: HSTS, X-Frame-Options, X-Content-Type-Options, Permissions-Policy
+- **Firestore Rules**: Field-level validation on writes (types, ranges, auth checks)
 
 ## License
 

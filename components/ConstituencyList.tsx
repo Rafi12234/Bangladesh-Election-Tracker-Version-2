@@ -1,7 +1,18 @@
 'use client';
 
+/**
+ * ConstituencyList — Displays all 300 constituencies with filters and search.
+ *
+ * PERF OPTIMIZATIONS:
+ * - React.memo on sub-components to prevent cascading re-renders
+ * - useMemo for resultMap, partyMap, and filtered list
+ * - IntersectionObserver-based infinite scroll (no heavy npm dep)
+ * - useCallback for filter handlers
+ * - Search input sanitized to prevent HTML injection
+ */
+
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import type { Result, Party, Constituency } from '@/types';
 import { RESULT_STATUS } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
@@ -13,9 +24,15 @@ interface Props {
   constituencies: Constituency[];
 }
 
-export default function ConstituencyList({ results, parties, constituencies }: Props) {
+// PERF: Progressive rendering batch sizes
+const INITIAL_RENDER_COUNT = 30;
+const LOAD_MORE_COUNT = 30;
+
+function ConstituencyListInner({ results, parties, constituencies }: Props) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'partial' | 'completed'>('all');
   const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Build lookup maps
   const partyMap = useMemo(() => {
@@ -45,9 +62,9 @@ export default function ConstituencyList({ results, parties, constituencies }: P
       });
     }
 
-    // Enhanced Search - search by constituency name, party name, or seat name
+    // SECURITY: Sanitize search query — strip HTML tags
     if (search.trim()) {
-      const q = search.toLowerCase();
+      const q = search.toLowerCase().replace(/<[^>]*>/g, '');
       list = list.filter(item => {
         // Search by constituency name
         if (item.constituency.name.toLowerCase().includes(q)) return true;
@@ -80,15 +97,47 @@ export default function ConstituencyList({ results, parties, constituencies }: P
     return list;
   }, [constituencies, resultMap, statusFilter, search, partyMap]);
 
+  // Reset visible count when filters change
+  useEffect(() => {
+    setVisibleCount(INITIAL_RENDER_COUNT);
+  }, [statusFilter, search]);
+
+  // PERF: IntersectionObserver-based infinite scroll — loads more as user nears bottom
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filtered.length) {
+          setVisibleCount(prev => Math.min(prev + LOAD_MORE_COUNT, filtered.length));
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length]);
+
+  // PERF: useCallback for stable handler references
+  const handleStatusFilter = useCallback((s: 'all' | 'pending' | 'partial' | 'completed') => {
+    setStatusFilter(s);
+  }, []);
+
+  const handleSearch = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, []);
+
+  const visibleItems = filtered.slice(0, visibleCount);
+
   return (
     <div>
       {/* Filters with modern design */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex gap-2 overflow-x-auto py-1 px-1 scrollbar-hide">
-          {(['all', 'completed', 'partial', 'pending'] as const).map((s, idx) => (
+          {(['all', 'completed', 'partial', 'pending'] as const).map((s) => (
             <button
               key={s}
-              onClick={() => setStatusFilter(s)}
+              onClick={() => handleStatusFilter(s)}
               className={`group relative rounded-full px-6 py-3 text-xs sm:text-sm font-bold transition-all duration-300 whitespace-nowrap ${
                 statusFilter === s
                   ? 'bg-gradient-to-r from-bd-green via-emerald-500 to-emerald-600 dark:from-emerald-600 dark:via-emerald-500 dark:to-emerald-400 text-white shadow-xl scale-105 ring-2 ring-emerald-300 dark:ring-emerald-500/50'
@@ -107,7 +156,8 @@ export default function ConstituencyList({ results, parties, constituencies }: P
             type="text"
             placeholder="Search by name, party, or seat..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={handleSearch}
+            maxLength={100}
             className="w-full sm:w-80 rounded-2xl border-2 border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-11 pr-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-bd-green/50 focus:border-bd-green dark:focus:border-emerald-500 transition-all shadow-sm hover:shadow-lg group-hover:border-gray-300 dark:group-hover:border-slate-600"
           />
           <svg className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-hover:text-bd-green dark:group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,63 +167,23 @@ export default function ConstituencyList({ results, parties, constituencies }: P
       </div>
 
       {/* List with enhanced cards */}
+      {/* PERF: Progressively rendered list with IntersectionObserver */}
       <div className="space-y-3">
-        {filtered.slice(0, 50).map(({ constituency, result }) => {
-          const winner = result?.winnerPartyId ? partyMap[result.winnerPartyId] : null;
-          const status = result?.status || 'pending';
-          const { label: statusLabel, color: statusColor } = RESULT_STATUS[status as keyof typeof RESULT_STATUS] || RESULT_STATUS.pending;
+        {visibleItems.map(({ constituency, result }) => (
+          <ConstituencyCard
+            key={constituency.id}
+            constituency={constituency}
+            result={result}
+            partyMap={partyMap}
+          />
+        ))}
 
-          return (
-            <Link
-              key={constituency.id}
-              href={`/constituency/${encodeURIComponent(constituency.id)}`}
-              className="group block rounded-2xl border-2 border-gray-200/70 dark:border-slate-700/70 bg-gradient-to-r from-white via-white to-gray-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/50 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-bd-green/50 dark:hover:border-emerald-500/50 hover:scale-[1.01]"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  {/* Winner color indicator with glow */}
-                  <div className="relative flex-shrink-0">
-                    <div 
-                      className="absolute inset-0 rounded-full blur-md opacity-40 group-hover:opacity-70 group-hover:blur-lg transition-all"
-                      style={{ backgroundColor: winner?.color || '#E5E7EB' }}
-                    />
-                    <span
-                      className="relative block h-5 w-5 rounded-full shadow-lg group-hover:scale-125 transition-transform ring-2 ring-white dark:ring-slate-900"
-                      style={{ backgroundColor: winner?.color || '#E5E7EB' }}
-                    />
-                  </div>
-                  
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm sm:text-base font-black text-gray-900 dark:text-gray-100 truncate group-hover:text-bd-green dark:group-hover:text-emerald-400 transition-colors">
-                      {constituency.name}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
-                        {winner ? (
-                          <span style={{ color: winner.color }} className="font-bold">
-                            {getWinnerDisplayName(result.winnerPartyId, true)}
-                          </span>
-                        ) : (
-                          'Awaiting result'
-                        )}
-                      </p>
-                      {result && (
-                        <>
-                          <span className="text-gray-300 dark:text-gray-600">•</span>
-                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatNumber(result.totalVotes)} votes</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                
-                <span className={`flex-shrink-0 rounded-xl px-4 py-2 text-[10px] sm:text-xs font-black ${statusColor} whitespace-nowrap shadow-md group-hover:shadow-xl transition-all group-hover:scale-110`}>
-                  {statusLabel}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
+        {/* Sentinel element triggers loading more items */}
+        {visibleCount < filtered.length && (
+          <div ref={sentinelRef} className="py-4 text-center">
+            <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-bd-green border-r-transparent" />
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="py-20 text-center">
@@ -186,10 +196,10 @@ export default function ConstituencyList({ results, parties, constituencies }: P
             <p className="text-sm text-gray-500 dark:text-gray-500">Try adjusting your filters or search query</p>
           </div>
         )}
-        {filtered.length > 50 && (
+        {visibleCount >= filtered.length && filtered.length > INITIAL_RENDER_COUNT && (
           <div className="mt-8 text-center">
             <p className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-700 px-6 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 shadow-lg">
-              <span>Showing 50 of {filtered.length} constituencies</span>
+              <span>Showing all {filtered.length} constituencies</span>
             </p>
           </div>
         )}
@@ -197,3 +207,70 @@ export default function ConstituencyList({ results, parties, constituencies }: P
     </div>
   );
 }
+
+/**
+ * PERF: Memoized constituency card — only re-renders when its own data changes.
+ */
+const ConstituencyCard = React.memo(function ConstituencyCard({
+  constituency,
+  result,
+  partyMap,
+}: {
+  constituency: Constituency;
+  result: Result | null;
+  partyMap: Record<string, Party>;
+}) {
+  const winner = result?.winnerPartyId ? partyMap[result.winnerPartyId] : null;
+  const status = result?.status || 'pending';
+  const { label: statusLabel, color: statusColor } = RESULT_STATUS[status as keyof typeof RESULT_STATUS] || RESULT_STATUS.pending;
+
+  return (
+    <Link
+      href={`/constituency/${encodeURIComponent(constituency.id)}`}
+      className="group block rounded-2xl border-2 border-gray-200/70 dark:border-slate-700/70 bg-gradient-to-r from-white via-white to-gray-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800/50 p-5 sm:p-6 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:border-bd-green/50 dark:hover:border-emerald-500/50 hover:scale-[1.01]"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+          <div className="relative flex-shrink-0">
+            <div
+              className="absolute inset-0 rounded-full blur-md opacity-40 group-hover:opacity-70 group-hover:blur-lg transition-all"
+              style={{ backgroundColor: winner?.color || '#E5E7EB' }}
+            />
+            <span
+              className="relative block h-5 w-5 rounded-full shadow-lg group-hover:scale-125 transition-transform ring-2 ring-white dark:ring-slate-900"
+              style={{ backgroundColor: winner?.color || '#E5E7EB' }}
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm sm:text-base font-black text-gray-900 dark:text-gray-100 truncate group-hover:text-bd-green dark:group-hover:text-emerald-400 transition-colors">
+              {constituency.name}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                {winner ? (
+                  <span style={{ color: winner.color }} className="font-bold">
+                    {getWinnerDisplayName(result!.winnerPartyId, true)}
+                  </span>
+                ) : (
+                  'Awaiting result'
+                )}
+              </p>
+              {result && (
+                <>
+                  <span className="text-gray-300 dark:text-gray-600">•</span>
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{formatNumber(result.totalVotes)} votes</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <span className={`flex-shrink-0 rounded-xl px-4 py-2 text-[10px] sm:text-xs font-black ${statusColor} whitespace-nowrap shadow-md group-hover:shadow-xl transition-all group-hover:scale-110`}>
+          {statusLabel}
+        </span>
+      </div>
+    </Link>
+  );
+});
+
+// PERF: Wrap entire component in React.memo
+export default React.memo(ConstituencyListInner);

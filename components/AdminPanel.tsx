@@ -12,6 +12,7 @@ import { divisions } from '@/data/divisions';
 import { saveResult, getResultByConstituency, getAllConstituencyDocuments } from '@/lib/firestore';
 import { formatNumber, formatPercentage } from '@/lib/utils';
 import { getPartyById, getPartyByName, normalizePartyKey } from '@/data/parties';
+import { validateVoteCount, checkRateLimit } from '@/lib/validation';
 
 interface Props {
   parties: Party[];
@@ -212,7 +213,8 @@ export default function AdminPanel({ parties, adminUser, onLogout }: Props) {
   }, [activeId]);
 
   const updateVote = (partyId: string, value: string) => {
-    const votes = parseInt(value, 10) || 0;
+    // SECURITY: Validate vote count — clamps to non-negative integer, max 10M
+    const votes = validateVoteCount(value);
     setVoteInputs(prev => prev.map(v => (v.partyId === partyId ? { ...v, votes } : v)));
   };
 
@@ -228,6 +230,12 @@ export default function AdminPanel({ parties, adminUser, onLogout }: Props) {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!activeId) return;
+
+    // SECURITY: Rate limit — max 10 saves per minute per admin
+    if (!checkRateLimit(`save-result-${adminUser.uid}`, 10, 60_000)) {
+      setMessage({ type: 'error', text: 'Too many save attempts. Please wait a moment.' });
+      return;
+    }
 
     setSaving(true);
     setMessage(null);

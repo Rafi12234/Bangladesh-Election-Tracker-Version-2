@@ -18,7 +18,7 @@ import type { Constituency, SeatCount } from '@/types';
 export default function HomePage() {
   const { parties, loading: pLoading } = useParties();
   const { results, loading: rLoading } = useResults();
-  const { summary } = useSummary();
+  const { summary } = useSummary(results);
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
   const [cLoading, setCLoading] = useState(true);
 

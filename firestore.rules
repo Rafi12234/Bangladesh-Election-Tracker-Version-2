@@ -21,10 +21,21 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ─── Results — public read, admin write ───
+    // ─── Results — public read, admin write with field validation ───
     match /results/{resultId} {
       allow read: if true;
-      allow write: if isAdmin();
+
+      // SECURITY: Validate result document structure and field types
+      allow write: if isAdmin()
+        && request.resource.data.keys().hasAll(['constituencyId', 'partyVotes', 'status', 'totalVotes', 'updatedAt', 'updatedBy'])
+        && request.resource.data.constituencyId is string
+        && request.resource.data.constituencyId.size() > 0
+        && request.resource.data.constituencyId.size() < 100
+        && request.resource.data.partyVotes is map
+        && request.resource.data.status in ['partial', 'completed']
+        && request.resource.data.totalVotes is number
+        && request.resource.data.totalVotes >= 0
+        && request.resource.data.updatedBy == request.auth.uid;
     }
 
     // ─── Candidates — public read, admin write ───

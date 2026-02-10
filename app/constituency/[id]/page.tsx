@@ -1,6 +1,7 @@
 'use client';
 
-/* Constituency detail page — full breakdown */
+/* Constituency detail page — full breakdown
+ * PERF: Memoized party lookups and vote entries to reduce re-renders */
 
 import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
@@ -9,7 +10,7 @@ import { PageLoader } from '@/components/LoadingSpinner';
 import { useParties, useConstituencyResult } from '@/hooks';
 import { RESULT_STATUS } from '@/lib/constants';
 import { formatNumber, formatPercentage, getRelativeTime, calculatePercentage } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { getConstituencyById, normalizeConstituencyId } from '@/lib/firestore';
 import type { Constituency } from '@/types';
 
@@ -20,19 +21,10 @@ export default function ConstituencyDetailPage() {
   
   // Decode URL-encoded constituency ID (e.g., "cox's%20bazar-1" -> "cox's bazar-1")
   const id = rawId ? decodeURIComponent(rawId) : '';
-  const normalizedId = id ? normalizeConstituencyId(id) : '';
 
   const { parties } = useParties();
   const { result, candidates, loading } = useConstituencyResult(id);
   const [constituency, setConstituency] = useState<Constituency | null>(null);
-
-  // Debug logging
-  console.log('[Debug] Raw ID:', rawId);
-  console.log('[Debug] Decoded ID:', id);
-  console.log('[Debug] Normalized ID:', normalizedId);
-  console.log('[Debug] Result:', result);
-  console.log('[Debug] Candidates:', candidates);
-  console.log('[Debug] Loading:', loading);
 
   useEffect(() => {
     if (id) {
@@ -40,28 +32,29 @@ export default function ConstituencyDetailPage() {
     }
   }, [id]);
 
-  // Build party lookup
-  const partyMap = Object.fromEntries(parties.map(p => [p.id, p]));
+  // PERF: Memoize party lookup map to avoid rebuilding on every render
+  const partyMap = useMemo(() => Object.fromEntries(parties.map(p => [p.id, p])), [parties]);
 
-  // Build vote entries for VoteBar
-  const voteEntries = result
-    ? Object.entries(result.partyVotes)
-        .filter(([, votes]) => votes > 0)
-        .map(([partyId, votes]) => {
-          const party = partyMap[partyId];
-          const candidate = candidates.find(c => c.partyId === partyId);
-          return {
-            partyId,
-            partyName: party?.shortName || partyId,
-            partyColor: party?.color || '#6B7280',
-            candidateName: candidate?.name || 'Unknown',
-            votes,
-            percentage: calculatePercentage(votes, result.totalVotes),
-            isWinner: result.winnerPartyId === partyId,
-          };
-        })
-        .sort((a, b) => b.votes - a.votes)
-    : [];
+  // PERF: Memoize vote entries to avoid recalculating on every render
+  const voteEntries = useMemo(() => {
+    if (!result) return [];
+    return Object.entries(result.partyVotes)
+      .filter(([, votes]) => votes > 0)
+      .map(([partyId, votes]) => {
+        const party = partyMap[partyId];
+        const candidate = candidates.find(c => c.partyId === partyId);
+        return {
+          partyId,
+          partyName: party?.shortName || partyId,
+          partyColor: party?.color || '#6B7280',
+          candidateName: candidate?.name || 'Unknown',
+          votes,
+          percentage: calculatePercentage(votes, result.totalVotes),
+          isWinner: result.winnerPartyId === partyId,
+        };
+      })
+      .sort((a, b) => b.votes - a.votes);
+  }, [result, partyMap, candidates]);
 
   const status = result?.status || 'pending';
   const statusInfo = RESULT_STATUS[status as keyof typeof RESULT_STATUS] || RESULT_STATUS.pending;

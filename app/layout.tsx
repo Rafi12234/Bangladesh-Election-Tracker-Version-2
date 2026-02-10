@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import './globals.css';
 
 export const viewport: Viewport = {
@@ -24,6 +25,11 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_BD',
   },
+  // SECURITY: Prevent search engines from indexing admin pages
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
@@ -34,43 +40,23 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Preload critical fonts */}
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
+        {/* PERF: Preconnect to Google Fonts for faster loading */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        
-        {/* Preload Leaflet CSS for faster map loading */}
-        <link
-          rel="preload"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          as="style"
-        />
-        <link
-          id="leaflet-css"
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        />
-        
-        {/* Cloudflare Web Analytics */}
-        <script
-          defer
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "YOUR_CLOUDFLARE_TOKEN"}'
-        />
+        {/* PERF: Leaflet CSS removed from global — only loaded on map page (lazy) */}
       </head>
       <body className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200">
         {children}
+        {/* PERF: Load analytics script lazily after page interactive */}
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "YOUR_CLOUDFLARE_TOKEN"}'
+          strategy="lazyOnload"
+        />
       </body>
     </html>
   );

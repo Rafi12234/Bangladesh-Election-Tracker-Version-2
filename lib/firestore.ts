@@ -181,17 +181,13 @@ export async function getConstituencyDocument(id: string): Promise<Record<string
   // Try normalized ID first, then original format for backward compatibility
   let docRef = doc(firestore, COLLECTIONS.CONSTITUENCIES, normalizedId);
   let docSnap = await getDoc(docRef);
-  let usedFormat = 'normalized';
   
   if (!docSnap.exists()) {
     // Try with original format (with apostrophes and spaces)
     const originalFormat = decodeURIComponent(id).toLowerCase();
     docRef = doc(firestore, COLLECTIONS.CONSTITUENCIES, originalFormat);
     docSnap = await getDoc(docRef);
-    usedFormat = 'original';
   }
-  
-  console.log(`[Firestore] getConstituencyDocument: ${id} -> ${docSnap.exists() ? `found with ${usedFormat} format` : 'not found'}`);
   
   return docSnap.exists() ? docSnap.data() : null;
 }
@@ -249,17 +245,13 @@ export async function getCandidatesByConstituency(constituencyId: string): Promi
   // Try normalized ID first, then original format for backward compatibility
   let docRef = doc(firestore, COLLECTIONS.CONSTITUENCIES, normalizedId);
   let docSnap = await getDoc(docRef);
-  let usedFormat = 'normalized';
   
   if (!docSnap.exists()) {
     // Try with original format (with apostrophes and spaces)
     const originalFormat = decodeURIComponent(constituencyId).toLowerCase();
     docRef = doc(firestore, COLLECTIONS.CONSTITUENCIES, originalFormat);
     docSnap = await getDoc(docRef);
-    usedFormat = 'original';
   }
-  
-  console.log(`[Firestore] getCandidatesByConstituency: ${constituencyId} -> ${docSnap.exists() ? `found with ${usedFormat} format` : 'not found'}`);
   
   if (!docSnap.exists()) return [];
 
@@ -291,17 +283,13 @@ export async function getResultByConstituency(constituencyId: string): Promise<R
   // Try normalized ID first, then original format for backward compatibility
   let docRef = doc(firestore, COLLECTIONS.RESULTS, normalizedId);
   let docSnap = await getDoc(docRef);
-  let usedFormat = 'normalized';
   
   if (!docSnap.exists()) {
     // Try with original format (with apostrophes and spaces)
     const originalFormat = decodeURIComponent(constituencyId).toLowerCase();
     docRef = doc(firestore, COLLECTIONS.RESULTS, originalFormat);
     docSnap = await getDoc(docRef);
-    usedFormat = 'original';
   }
-  
-  console.log(`[Firestore] getResultByConstituency: ${constituencyId} -> ${docSnap.exists() ? `found with ${usedFormat} format` : 'not found'}`);
   
   if (!docSnap.exists()) return null;
   return normalizeResult(docSnap.data(), docSnap.id);
@@ -370,9 +358,7 @@ export async function saveResult(payload: SaveResultPayload): Promise<void> {
     const originalDocSnap = await getDoc(originalDocRef);
     if (originalDocSnap.exists()) {
       actualDocId = originalFormat;  // Use original format if it exists
-      console.log(`[Firestore] saveResult: Using original format ID "${originalFormat}" for existing document`);
     } else {
-      console.log(`[Firestore] saveResult: Using normalized format ID "${normalizedId}" for new document`);
     }
   }
   

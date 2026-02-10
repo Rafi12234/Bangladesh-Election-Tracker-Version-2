@@ -6,6 +6,7 @@ import { ArrowLeftIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import Header from '@/components/Header';
 import { getNewsBySlug } from '@/lib/news';
 import { formatDate } from '@/lib/utils';
+import { sanitizeNewsContent } from '@/lib/validation';
 
 interface Props {
   params: {
@@ -122,8 +123,8 @@ export default async function ArticlePage({ params }: Props) {
               {article.content.split('\n').map((paragraph, index) => {
                 if (paragraph.trim() === '') return null;
                 
-                // Basic markdown-style formatting
-                let formattedParagraph = paragraph
+                // SECURITY: Sanitize content before rendering — strips scripts and event handlers
+                let formattedParagraph = sanitizeNewsContent(paragraph)
                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                   .replace(/\*(.*?)\*/g, '<em>$1</em>');
 

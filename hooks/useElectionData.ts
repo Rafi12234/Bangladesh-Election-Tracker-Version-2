@@ -72,10 +72,14 @@ export function useResults() {
 // ============================================
 // useSummary - Real-time election summary
 // ============================================
-export function useSummary() {
+/**
+ * PERF FIX: Removed internal useResults() call which created a duplicate
+ * Firestore subscription. Now accepts results as a parameter from the caller.
+ * Falls back to computing from results only when summary doc doesn't exist.
+ */
+export function useSummary(results: Result[] = []) {
   const [summary, setSummary] = useState<ElectionSummary | null>(null);
   const [loading, setLoading] = useState(true);
-  const { results } = useResults();
 
   useEffect(() => {
     setLoading(true);
