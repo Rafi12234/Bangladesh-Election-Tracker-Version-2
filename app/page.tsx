@@ -5,23 +5,42 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import Header from '@/components/Header';
-import ElectionBanner from '@/components/ElectionBanner';
-import Footer from '@/components/Footer';
-import { PageLoader } from '@/components/LoadingSpinner';
 import { useParties, useResults, useSummary } from '@/hooks';
 import { getConstituencies } from '@/lib/firestore';
 import { aggregateAllianceSeatCounts } from '@/lib/alliances';
 import type { Constituency, SeatCount } from '@/types';
 
-// Dynamic imports for heavy components to reduce initial bundle size
+// Dynamic imports for ALL non-critical components to reduce initial bundle size
+const Header = dynamic(() => import('@/components/Header'), {
+  ssr: true
+});
+
+const ElectionBanner = dynamic(() => import('@/components/ElectionBanner'), {
+  ssr: true
+});
+
+const Footer = dynamic(() => import('@/components/Footer'), {
+  ssr: false
+});
+
 const ResultsSummary = dynamic(() => import('@/components/ResultsSummary'), {
-  loading: () => <PageLoader />,
+  loading: () => (
+    <div className="animate-pulse space-y-4">
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+      <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+    </div>
+  ),
   ssr: false
 });
 
 const ConstituencyList = dynamic(() => import('@/components/ConstituencyList'), {
-  loading: () => <PageLoader />,
+  loading: () => (
+    <div className="animate-pulse space-y-2">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      ))}
+    </div>
+  ),
   ssr: false
 });
 

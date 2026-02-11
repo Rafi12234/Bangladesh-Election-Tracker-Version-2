@@ -1,4 +1,10 @@
 /** @type {import('next').NextConfig} */
+
+// Bundle analyzer for identifying large dependencies
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   // PERF: Strict mode helps catch bugs early; enabled in dev, transparent in prod
   reactStrictMode: true,
@@ -19,6 +25,15 @@ const nextConfig = {
   // PERF: Enable experimental optimizations
   experimental: {
     optimizePackageImports: ['@heroicons/react', 'firebase', 'firebase/firestore', 'firebase/auth'],
+    // Enable turbo mode for faster builds in development
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
 
   // PERF: Optimize webpack for faster builds and smaller bundles
@@ -124,4 +139,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);

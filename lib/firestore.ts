@@ -39,7 +39,7 @@ const cache = {
   constituenciesTimestamp: 0,
 };
 
-const CACHE_DURATION = 60000; // 1 minute cache
+const CACHE_DURATION = 300000; // 5 minutes cache (increased from 1 minute)
 
 // ============================================
 // District lookup (same pattern as AdminPanel)
