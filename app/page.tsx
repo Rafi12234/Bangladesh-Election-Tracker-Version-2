@@ -33,10 +33,24 @@ export default function HomePage() {
   const [cLoading, setCLoading] = useState(true);
 
   useEffect(() => {
+    // Fetch constituencies with timeout to prevent hanging
+    const timeoutId = setTimeout(() => {
+      console.warn('Constituency loading taking too long, using fallback');
+      setCLoading(false);
+    }, 5000);
+
     getConstituencies()
       .then(setConstituencies)
-      .catch(console.error)
-      .finally(() => setCLoading(false));
+      .catch(err => {
+        console.error('Failed to load constituencies:', err);
+        setConstituencies([]);
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setCLoading(false);
+      });
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // Compute seat counts locally — no extra hooks / Firestore subscriptions
@@ -58,7 +72,10 @@ export default function HomePage() {
 
   const allianceSeatCounts = useMemo(() => aggregateAllianceSeatCounts(results), [results]);
 
-  if (pLoading || rLoading || cLoading) {
+  // Show a more informative loading state
+  const isInitialLoad = pLoading || rLoading;
+
+  if (isInitialLoad) {
     return (
       <>
         <Header />
@@ -84,7 +101,13 @@ export default function HomePage() {
 
           <section>
             <h2 className="mb-3 text-base font-bold text-gray-900 dark:text-gray-100">Constituencies</h2>
-            <ConstituencyList results={results} parties={parties} constituencies={constituencies} enablePagination itemsPerPage={30} />
+            {cLoading ? (
+              <div className="flex items-center justify-center py-10">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-bd-green border-r-transparent" />
+              </div>
+            ) : (
+              <ConstituencyList results={results} parties={parties} constituencies={constituencies} enablePagination itemsPerPage={30} />
+            )}
           </section>
         </div>
       </main>

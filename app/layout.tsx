@@ -69,6 +69,7 @@ export default function RootLayout({
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
               strategy="afterInteractive"
+              async
             />
             <Script
               id="google-analytics"
@@ -80,7 +81,8 @@ export default function RootLayout({
                   gtag('js', new Date());
                   gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
                     page_path: window.location.pathname,
-                    page_title: document.title,
+                    send_page_view: true,
+                    cookie_flags: 'SameSite=None;Secure'
                   });
                 `,
               }}
