@@ -151,8 +151,8 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
 
   return (
     <div className="space-y-6 fade-in">
-      {/* Key metrics row with gradient cards */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-5">
+      {/* Key metrics row with gradient cards - 6 columns */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
         <MetricCard label="Total Seats" value={TOTAL_SEATS} icon={<ChartBarIcon className="h-6 w-6" />} />
         <MetricCard label="Declared" value={summary.declaredSeats} accent icon={<CheckCircleIcon className="h-6 w-6" />} />
         <MetricCard label="Suspended" value={2} suspended icon={<svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
@@ -166,57 +166,12 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
           value={formatPercentage(summary.nationalTurnout)}
           icon={<ArrowTrendingUpIcon className="h-6 w-6" />}
         />
+        <MetricCard
+          label="Government Status"
+          value="🥇"
+          icon={<svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        />
       </div>
-
-      {/* Government Formation Status Card */}
-      <section 
-        className="group relative overflow-hidden rounded-2xl border border-gray-200/50 dark:border-slate-700/50 bg-gradient-to-br from-white via-gray-50/30 to-white dark:from-slate-900 dark:via-slate-900/50 dark:to-slate-900 p-4 sm:p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-        aria-label="Government formation status"
-      >
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-100/20 dark:to-slate-800/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-        
-        <div className="relative">
-          {/* Icon and Label */}
-          <div className="flex justify-center mb-3 transition-all text-gray-600 dark:text-gray-400 group-hover:text-bd-green dark:group-hover:text-emerald-400 group-hover:scale-110">
-            <span className="text-2xl" role="img" aria-label="Government status indicator">🥇</span>
-          </div>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Government Status</p>
-          
-          {/* Status Value */}
-          <div className={`text-xl sm:text-3xl font-black mt-2 bg-gradient-to-r ${governmentStatus.color} bg-clip-text text-transparent`}>
-            {governmentStatus.status}
-          </div>
-          
-          {/* Description */}
-          <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mt-2 font-medium">
-            {governmentStatus.description}
-          </p>
-
-          {/* Progress indicator for leading alliance */}
-          {sortedAlliances.length > 0 && sortedAlliances[0] && summary.declaredSeats > 0 && (
-            <div className="mt-4">
-              <div className="flex justify-between items-center mb-2 text-xs">
-                <span className="font-semibold text-gray-600 dark:text-gray-400">
-                  {sortedAlliances[0].allianceName}
-                </span>
-                <span className="font-bold text-gray-700 dark:text-gray-300">
-                  {sortedAlliances[0].seats} / {MAJORITY_SEATS}
-                </span>
-              </div>
-              <div className="h-2 bg-gray-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                <div 
-                  className="h-full rounded-full transition-all duration-1000 ease-out"
-                  style={{ 
-                    width: `${Math.min((sortedAlliances[0].seats / MAJORITY_SEATS) * 100, 100)}%`,
-                    backgroundColor: sortedAlliances[0].allianceColor,
-                  }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Winner Declaration or Leading Alliance Announcement */}
       {sortedAlliances.length > 0 && summary.declaredSeats > 0 && (
