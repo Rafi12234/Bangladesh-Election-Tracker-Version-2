@@ -3,8 +3,9 @@
 /* Landing page — Main dashboard showing election summary, seat counts,
    popular vote percentages, and a constituency list. */
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { useParties, useResults, useSummary } from '@/hooks';
 import { getConstituencies } from '@/lib/firestore';
 import { aggregateAllianceSeatCounts } from '@/lib/alliances';
@@ -33,6 +34,7 @@ const ResultsSummary = dynamic(() => import('@/components/ResultsSummary'), {
   ssr: false
 });
 
+// PERF: Lazy load constituency list only when scrolled into view
 const ConstituencyList = dynamic(() => import('@/components/ConstituencyList'), {
   loading: () => (
     <div className="animate-pulse space-y-2">
@@ -49,10 +51,33 @@ export default function HomePage() {
   const { results, loading: rLoading } = useResults();
   const { summary } = useSummary(results);
   const [constituencies, setConstituencies] = useState<Constituency[]>([]);
-  const [cLoading, setCLoading] = useState(true);
+  const [cLoading, setCLoading] = useState(false);
+  const [shouldLoadConstituencies, setShouldLoadConstituencies] = useState(false);
+  const constituencyRef = useRef<HTMLDivElement>(null);
 
+  // PERF: Lazy load constituencies only when section is visible
   useEffect(() => {
-    // Fetch constituencies with timeout to prevent hanging
+    if (!constituencyRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setShouldLoadConstituencies(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(constituencyRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // PERF: Fetch constituencies only when needed
+  useEffect(() => {
+    if (!shouldLoadConstituencies) return;
+
+    setCLoading(true);
     const timeoutId = setTimeout(() => {
       console.warn('Constituency loading taking too long, using fallback');
       setCLoading(false);
@@ -70,7 +95,7 @@ export default function HomePage() {
       });
 
     return () => clearTimeout(timeoutId);
-  }, []);
+  }, [shouldLoadConstituencies]);
 
   // Compute seat counts locally — no extra hooks / Firestore subscriptions
   const seatCounts = useMemo((): SeatCount[] => {
@@ -91,24 +116,9 @@ export default function HomePage() {
 
   const allianceSeatCounts = useMemo(() => aggregateAllianceSeatCounts(results), [results]);
 
-  // Show a more informative loading state
-  const isInitialLoad = pLoading || rLoading;
-
-  if (isInitialLoad) {
-    return (
-      <>
-        <Header />
-        <main className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-8 md:py-10">
-          <div className="flex items-center justify-center py-20">
-            <div className="text-center">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-bd-green border-r-transparent" />
-              <p className="mt-4 text-sm font-medium text-gray-500 dark:text-gray-400">Loading election data...</p>
-            </div>
-          </div>
-        </main>
-      </>
-    );
-  }
+  // PERF: Progressive loading - show page immediately, load data in background
+  // Don't block the entire page on loading state
+  const showSkeleton = (pLoading || rLoading) && results.length === 0;
 
   return (
     <>
@@ -116,16 +126,45 @@ export default function HomePage() {
       <ElectionBanner />
       <main className="mx-auto max-w-7xl px-3 sm:px-4 py-6 sm:py-8 md:py-10">
         <div className="space-y-8">
-          <ResultsSummary summary={summary} seatCounts={seatCounts} allianceSeatCounts={allianceSeatCounts} />
+          {/* PERF: Show results summary immediately when data is ready */}
+          {showSkeleton ? (
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          ) : (
+            <ResultsSummary summary={summary} seatCounts={seatCounts} allianceSeatCounts={allianceSeatCounts} />
+          )}
 
-          <section>
-            <h2 className="mb-3 text-base font-bold text-gray-900 dark:text-gray-100">Constituencies</h2>
-            {cLoading ? (
+          {/* PERF: Lazy-loaded constituency section with intersection observer */}
+          <section ref={constituencyRef}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-base font-bold text-gray-900 dark:text-gray-100">Constituencies</h2>
+              <Link 
+                href="/constituency" 
+                className="text-sm font-medium text-bd-green dark:text-emerald-400 hover:underline"
+              >
+                View All →
+              </Link>
+            </div>
+            
+            {!shouldLoadConstituencies ? (
+              <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-8 text-center">
+                <p className="text-sm text-gray-500 dark:text-gray-400">Scroll down to load constituencies...</p>
+              </div>
+            ) : cLoading || showSkeleton ? (
               <div className="flex items-center justify-center py-10">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-3 border-solid border-bd-green border-r-transparent" />
               </div>
             ) : (
-              <ConstituencyList results={results} parties={parties} constituencies={constituencies} enablePagination itemsPerPage={30} />
+              <ConstituencyList 
+                results={results} 
+                parties={parties} 
+                constituencies={constituencies} 
+                enablePagination 
+                itemsPerPage={10}
+              />
             )}
           </section>
         </div>
