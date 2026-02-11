@@ -84,7 +84,7 @@ export default function HomePage() {
 
           <section>
             <h2 className="mb-3 text-base font-bold text-gray-900 dark:text-gray-100">Constituencies</h2>
-            <ConstituencyList results={results} parties={parties} constituencies={constituencies} />
+            <ConstituencyList results={results} parties={parties} constituencies={constituencies} enablePagination itemsPerPage={30} />
           </section>
         </div>
       </main>
