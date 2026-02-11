@@ -103,7 +103,7 @@ export interface Result {
   totalVotes: number;
   margin: number;
   marginPercentage: number;
-  status: 'pending' | 'completed';
+  status: 'pending' | 'partial' | 'completed';
   updatedAt: Date;
   updatedBy: string;
 }
