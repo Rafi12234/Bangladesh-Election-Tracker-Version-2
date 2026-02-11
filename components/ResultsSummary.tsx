@@ -152,9 +152,9 @@ export default function ResultsSummary({ summary, seatCounts, allianceSeatCounts
   // Government status - using text instead of emoji per user request
 
   return (
-    <div className="space-y-6 fade-in">
-      {/* Key metrics row with gradient cards - 6 columns */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
+    <div className="space-y-8 fade-in">
+      {/* Key metrics row with modern gradient cards - 6 columns */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4 lg:gap-5">
         <MetricCard label="Total Seats" value={TOTAL_SEATS} icon={<ChartBarIcon className="h-6 w-6" />} />
         <MetricCard label="Declared" value={summary.declaredSeats} accent icon={<CheckCircleIcon className="h-6 w-6" />} />
         <MetricCard label="Suspended" value={2} suspended icon={<svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>} />
@@ -522,34 +522,66 @@ function MetricCard({
   customColor?: string;
   statusLabel?: string;
 }) {
+  // Determine gradient colors based on card type
+  const getGradientColors = () => {
+    if (suspended) return 'from-red-600/10 to-red-500/5 hover:from-red-600/15 hover:to-red-500/10';
+    if (accent) return 'from-emerald-600/10 to-emerald-500/5 hover:from-emerald-600/15 hover:to-emerald-500/10';
+    if (customColor) return 'from-blue-600/10 to-blue-500/5 hover:from-blue-600/15 hover:to-blue-500/10';
+    return 'from-gray-100 to-gray-50 dark:from-slate-800 dark:to-slate-900 hover:from-gray-150 hover:to-gray-100 dark:hover:from-slate-700 dark:hover:to-slate-800';
+  };
+
+  const getBorderColor = () => {
+    if (suspended) return 'border-red-200 dark:border-red-800/40 group-hover:border-red-300 dark:group-hover:border-red-700/60';
+    if (accent) return 'border-emerald-200 dark:border-emerald-800/40 group-hover:border-emerald-300 dark:group-hover:border-emerald-700/60';
+    if (customColor) return 'border-blue-200 dark:border-blue-800/40 group-hover:border-blue-300 dark:group-hover:border-blue-700/60';
+    return 'border-gray-200/60 dark:border-slate-700/40 group-hover:border-gray-300/80 dark:group-hover:border-slate-600/60';
+  };
+
+  const getIconBgGradient = () => {
+    if (suspended) return 'from-red-500/20 to-red-400/10';
+    if (accent) return 'from-emerald-500/20 to-emerald-400/10';
+    if (customColor) return 'from-blue-500/20 to-blue-400/10';
+    return 'from-gray-500/10 to-gray-400/5';
+  };
+
+  const getIconColor = () => {
+    if (suspended) return 'text-red-600 dark:text-red-400';
+    if (accent) return 'text-emerald-600 dark:text-emerald-400';
+    if (customColor) return '';
+    return 'text-gray-700 dark:text-gray-300';
+  };
+
   return (
     <div 
-      className="group relative overflow-hidden rounded-2xl border border-gray-200/50 dark:border-slate-700/50 bg-gradient-to-br from-white via-gray-50/30 to-white dark:from-slate-900 dark:via-slate-900/50 dark:to-slate-900 p-4 sm:p-5 text-center transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+      className={`group relative overflow-hidden rounded-2xl border-2 backdrop-blur-sm bg-gradient-to-br ${getGradientColors()} ${getBorderColor()} p-4 sm:p-6 text-center transition-all duration-300 hover:shadow-xl hover:-translate-y-1.5 hover:scale-[1.02] dark:bg-gradient-to-br`}
       title={statusLabel}
     >
-      {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent to-gray-100/20 dark:to-slate-800/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+      {/* Animated background glow effect */}
+      <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-gradient-to-br from-current via-transparent to-transparent opacity-0 blur-2xl group-hover:opacity-20 transition-opacity duration-500" />
       
-      <div className="relative">
+      {/* Top shine effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-40 transition-opacity rounded-2xl" />
+      
+      <div className="relative z-10">
         {icon && (
           <div 
-            className={`flex justify-center mb-3 transition-all ${
-              suspended 
-                ? 'text-red-500 dark:text-red-400 group-hover:text-red-600 dark:group-hover:text-red-300' 
-                : customColor 
-                ? 'group-hover:scale-110' 
-                : 'text-gray-600 dark:text-gray-400 group-hover:text-bd-green dark:group-hover:text-emerald-400'
-            } group-hover:scale-110`}
-            style={customColor ? { color: customColor } : {}}
+            className={`flex justify-center mb-4 transition-all duration-300 group-hover:scale-125`}
           >
-            {icon}
+            <div className={`p-3 rounded-xl bg-gradient-to-br ${getIconBgGradient()} backdrop-blur-md border border-white/20 shadow-lg`}>
+              <div 
+                className={`h-6 w-6 ${getIconColor()}`}
+                style={customColor ? { color: customColor } : {}}
+              >
+                {icon}
+              </div>
+            </div>
           </div>
         )}
-        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest mb-1">{label}</p>
         <p 
-          className={`text-lg sm:text-2xl xl:text-3xl font-black mt-2 leading-tight break-words ${
+          className={`text-lg sm:text-2xl xl:text-3xl font-black mt-2 leading-tight break-words transition-all duration-300 ${
             accent 
-              ? 'text-bd-green dark:text-emerald-400' 
+              ? 'text-emerald-600 dark:text-emerald-400' 
               : suspended 
               ? 'text-red-600 dark:text-red-400' 
               : customColor 
@@ -561,6 +593,14 @@ function MetricCard({
           {value}
         </p>
       </div>
+
+      {/* Bottom colored line decoration */}
+      <div 
+        className="absolute bottom-0 left-0 h-1 w-0 group-hover:w-full transition-all duration-300 rounded-full"
+        style={{
+          background: suspended ? '#ef4444' : accent ? '#10b981' : customColor ? customColor : '#6b7280'
+        }}
+      />
     </div>
   );
 }
