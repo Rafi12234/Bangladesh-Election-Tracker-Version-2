@@ -17,21 +17,27 @@ import type { Result, Party, Constituency } from '@/types';
 import { RESULT_STATUS } from '@/lib/constants';
 import { formatNumber } from '@/lib/utils';
 import { getWinnerDisplayName } from '@/lib/alliances';
+import Pagination from '@/components/Pagination';
 
 interface Props {
   results: Result[];
   parties: Party[];
   constituencies: Constituency[];
+  /** When true, replaces infinite scroll with numbered pagination */
+  enablePagination?: boolean;
+  /** Items per page when pagination is enabled (default 20) */
+  itemsPerPage?: number;
 }
 
 // PERF: Progressive rendering batch sizes
 const INITIAL_RENDER_COUNT = 30;
 const LOAD_MORE_COUNT = 30;
 
-function ConstituencyListInner({ results, parties, constituencies }: Props) {
+function ConstituencyListInner({ results, parties, constituencies, enablePagination = false, itemsPerPage = 20 }: Props) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'partial' | 'completed'>('all');
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(INITIAL_RENDER_COUNT);
+  const [currentPage, setCurrentPage] = useState(1);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Build lookup maps
@@ -97,13 +103,18 @@ function ConstituencyListInner({ results, parties, constituencies }: Props) {
     return list;
   }, [constituencies, resultMap, statusFilter, search, partyMap]);
 
-  // Reset visible count when filters change
+  // Reset visible count / page when filters change
   useEffect(() => {
-    setVisibleCount(INITIAL_RENDER_COUNT);
-  }, [statusFilter, search]);
+    if (enablePagination) {
+      setCurrentPage(1);
+    } else {
+      setVisibleCount(INITIAL_RENDER_COUNT);
+    }
+  }, [statusFilter, search, enablePagination]);
 
-  // PERF: IntersectionObserver-based infinite scroll — loads more as user nears bottom
+  // PERF: IntersectionObserver-based infinite scroll — loads more as user nears bottom (non-paginated mode only)
   useEffect(() => {
+    if (enablePagination) return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
     const observer = new IntersectionObserver(
@@ -116,7 +127,7 @@ function ConstituencyListInner({ results, parties, constituencies }: Props) {
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [visibleCount, filtered.length]);
+  }, [visibleCount, filtered.length, enablePagination]);
 
   // PERF: useCallback for stable handler references
   const handleStatusFilter = useCallback((s: 'all' | 'pending' | 'partial' | 'completed') => {
@@ -127,7 +138,16 @@ function ConstituencyListInner({ results, parties, constituencies }: Props) {
     setSearch(e.target.value);
   }, []);
 
-  const visibleItems = filtered.slice(0, visibleCount);
+  // Pagination calculations
+  const totalPages = enablePagination ? Math.ceil(filtered.length / itemsPerPage) : 0;
+  const visibleItems = enablePagination
+    ? filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+    : filtered.slice(0, visibleCount);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   return (
     <div>
@@ -178,8 +198,8 @@ function ConstituencyListInner({ results, parties, constituencies }: Props) {
           />
         ))}
 
-        {/* Sentinel element triggers loading more items */}
-        {visibleCount < filtered.length && (
+        {/* Infinite scroll sentinel (non-paginated mode) */}
+        {!enablePagination && visibleCount < filtered.length && (
           <div ref={sentinelRef} className="py-4 text-center">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-bd-green border-r-transparent" />
           </div>
@@ -196,7 +216,19 @@ function ConstituencyListInner({ results, parties, constituencies }: Props) {
             <p className="text-sm text-gray-500 dark:text-gray-500">Try adjusting your filters or search query</p>
           </div>
         )}
-        {visibleCount >= filtered.length && filtered.length > INITIAL_RENDER_COUNT && (
+
+        {/* Pagination controls (paginated mode) */}
+        {enablePagination && filtered.length > 0 && (
+          <div className="mt-6">
+            <p className="text-center text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+              Showing {(currentPage - 1) * itemsPerPage + 1}&ndash;{Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} constituencies
+            </p>
+            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+          </div>
+        )}
+
+        {/* Showing-all message (non-paginated mode) */}
+        {!enablePagination && visibleCount >= filtered.length && filtered.length > INITIAL_RENDER_COUNT && (
           <div className="mt-8 text-center">
             <p className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-gray-100 to-gray-200 dark:from-slate-800 dark:to-slate-700 px-6 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 shadow-lg">
               <span>Showing all {filtered.length} constituencies</span>
