@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
@@ -32,11 +32,7 @@ export default function EditArticlePage({ params }: Props) {
     status: 'draft',
   });
 
-  useEffect(() => {
-    loadArticle();
-  }, [params.id]);
-
-  const loadArticle = async () => {
+  const loadArticle = useCallback(async () => {
     try {
       setLoading(true);
       const fetchedArticle = await getNewsById(params.id);
@@ -62,7 +58,11 @@ export default function EditArticlePage({ params }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
+
+  useEffect(() => {
+    loadArticle();
+  }, [loadArticle]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

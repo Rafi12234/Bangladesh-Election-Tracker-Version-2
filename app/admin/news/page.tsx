@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { PlusIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { getAllNews, deleteNews } from '@/lib/news';
@@ -26,23 +26,7 @@ export default function AdminNewsPage() {
     loadArticles();
   }, []);
 
-  useEffect(() => {
-    filterArticles();
-  }, [articles, statusFilter, searchQuery]);
-
-  const loadArticles = async () => {
-    try {
-      setLoading(true);
-      const fetchedArticles = await getAllNews();
-      setArticles(fetchedArticles);
-    } catch (error) {
-      console.error('Failed to load articles:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterArticles = () => {
+  const filterArticles = useCallback(() => {
     let filtered = articles;
 
     // Filter by status
@@ -62,7 +46,25 @@ export default function AdminNewsPage() {
     }
 
     setFilteredArticles(filtered);
+  }, [articles, statusFilter, searchQuery]);
+
+  useEffect(() => {
+    filterArticles();
+  }, [filterArticles]);
+
+  const loadArticles = async () => {
+    try {
+      setLoading(true);
+      const fetchedArticles = await getAllNews();
+      setArticles(fetchedArticles);
+    } catch (error) {
+      console.error('Failed to load articles:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+
 
   const handleDelete = async (id: string) => {
     try {

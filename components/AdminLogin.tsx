@@ -29,6 +29,7 @@ export default function AdminLogin({ onLogin, error, loading }: Props) {
 
   const isLoading = loading || submitting;
 
+  // Using isLoading for button's disabled state and loading text
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-4">
       <form

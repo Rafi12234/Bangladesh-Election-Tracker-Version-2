@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import Script from 'next/script';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 
+// @next/next/no-page-custom-font - Ignored: Using next/font/google which is optimized for App Router
 // PERF: Optimize font loading with next/font
 const inter = Inter({
   subsets: ['latin'],
@@ -57,12 +59,34 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-white dark:bg-slate-950 transition-colors duration-200 font-sans antialiased">
         {children}
-        {/* PERF: Load analytics script lazily after page interactive */}
-        <Script
-          src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token": "YOUR_CLOUDFLARE_TOKEN"}'
-          strategy="lazyOnload"
-        />
+        
+        {/* ANALYTICS: Vercel Web Analytics - tracks Core Web Vitals */}
+        <Analytics />
+        
+        {/* ANALYTICS: Google Analytics 4 - complete visitor tracking */}
+        {process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID}', {
+                    page_path: window.location.pathname,
+                    page_title: document.title,
+                  });
+                `,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   );
