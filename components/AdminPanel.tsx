@@ -14,7 +14,7 @@ import { formatNumber, formatPercentage } from '@/lib/utils';
 import { getPartyById, normalizePartyKey } from '@/data/parties';
 import { validateVoteCount, checkRateLimit } from '@/lib/validation';
 
-interface Props {
+interface Props{
   adminUser: AdminUser;
   onLogout: () => void;
 }
