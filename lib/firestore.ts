@@ -108,9 +108,16 @@ function normalizeResult(raw: Record<string, unknown>, docId: string): Result {
     partyVotes[normalizedKey] = (partyVotes[normalizedKey] || 0) + votes;
   }
 
-  const winnerPartyId = raw.winnerPartyId
+  // Get stored winner or compute from votes if missing
+  let winnerPartyId = raw.winnerPartyId
     ? normalizePartyKey(raw.winnerPartyId as string)
     : null;
+  
+  // If winnerPartyId is missing but we have votes, compute current leader
+  if (!winnerPartyId && Object.keys(partyVotes).length > 0) {
+    const sortedParties = Object.entries(partyVotes).sort(([, a], [, b]) => b - a);
+    winnerPartyId = sortedParties[0]?.[0] || null;
+  }
 
   const status = (raw.status as Result['status']) || 'pending';
 
@@ -120,6 +127,19 @@ function normalizeResult(raw: Record<string, unknown>, docId: string): Result {
     ? getWinnerAllianceId(winnerPartyId)
     : null;
 
+  // Compute or use stored totals and margin
+  const totalVotes = (raw.totalVotes as number) || Object.values(partyVotes).reduce((sum, v) => sum + v, 0);
+  
+  let margin = (raw.margin as number) || 0;
+  let marginPercentage = (raw.marginPercentage as number) || 0;
+  
+  // Recompute margin if missing or if we just computed the winner
+  if ((!margin || !raw.winnerPartyId) && Object.keys(partyVotes).length > 1) {
+    const sortedVotes = Object.values(partyVotes).sort((a, b) => b - a);
+    margin = (sortedVotes[0] || 0) - (sortedVotes[1] || 0);
+    marginPercentage = totalVotes > 0 ? (margin / totalVotes) * 100 : 0;
+  }
+
   return {
     id: docId,
     constituencyId: (raw.constituencyId as string) || docId,
@@ -128,9 +148,9 @@ function normalizeResult(raw: Record<string, unknown>, docId: string): Result {
     winnerPartyId,
     winnerAllianceId,
     winnerCandidateId: (raw.winnerCandidateId as string) || null,
-    totalVotes: (raw.totalVotes as number) || 0,
-    margin: (raw.margin as number) || 0,
-    marginPercentage: (raw.marginPercentage as number) || 0,
+    totalVotes,
+    margin,
+    marginPercentage,
     status,
     updatedAt: (raw.updatedAt as Timestamp)?.toDate?.() || new Date(),
     updatedBy: (raw.updatedBy as string) || '',
