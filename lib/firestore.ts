@@ -377,7 +377,7 @@ export function subscribeToResult(
 export interface SaveResultPayload {
   constituencyId: string;
   partyVotes: Record<string, number>;
-  status: 'partial' | 'completed';
+  status: 'pending' | 'partial' | 'counting' | 'completed';
   adminUid: string;
 }
 
